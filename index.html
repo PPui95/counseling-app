@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Video → Audio Converter</title>
-  <!-- Unregister old coi-serviceworker so COEP headers stop blocking CDN scripts -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
@@ -16,72 +15,47 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #e0e0e0;
-      padding: 20px;
+      display: flex; align-items: center; justify-content: center;
+      color: #e0e0e0; padding: 20px;
     }
     .container {
       background: rgba(255,255,255,0.05);
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 20px;
-      padding: 40px;
-      width: 100%;
-      max-width: 680px;
+      border-radius: 20px; padding: 40px;
+      width: 100%; max-width: 680px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     }
     h1 {
-      text-align: center;
-      font-size: 2rem;
-      font-weight: 700;
+      text-align: center; font-size: 2rem; font-weight: 700;
       background: linear-gradient(90deg, #00d2ff, #7b2ff7);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 8px;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 8px;
     }
     .subtitle { text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 32px; }
     .drop-zone {
-      border: 2px dashed rgba(0,210,255,0.4);
-      border-radius: 16px;
-      padding: 48px 24px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      background: rgba(0,210,255,0.03);
+      border: 2px dashed rgba(0,210,255,0.4); border-radius: 16px;
+      padding: 48px 24px; text-align: center; cursor: pointer;
+      transition: all 0.3s ease; background: rgba(0,210,255,0.03);
     }
     .drop-zone:hover, .drop-zone.drag-over {
-      border-color: #00d2ff;
-      background: rgba(0,210,255,0.08);
-      transform: scale(1.01);
+      border-color: #00d2ff; background: rgba(0,210,255,0.08); transform: scale(1.01);
     }
     .drop-icon { font-size: 3.5rem; margin-bottom: 16px; display: block; }
     .drop-zone h3 { font-size: 1.1rem; color: #ccc; margin-bottom: 8px; }
     .drop-zone p { color: #666; font-size: 0.85rem; }
     #fileInput { display: none; }
     .browse-btn {
-      display: inline-block;
-      margin-top: 16px;
-      padding: 10px 24px;
+      display: inline-block; margin-top: 16px; padding: 10px 24px;
       background: linear-gradient(90deg, #00d2ff, #7b2ff7);
-      border: none;
-      border-radius: 8px;
-      color: white;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.2s;
+      border: none; border-radius: 8px; color: white;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s;
     }
     .browse-btn:hover { opacity: 0.85; }
     .file-info {
-      display: none;
-      margin-top: 20px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 12px;
-      padding: 16px 20px;
-      border: 1px solid rgba(255,255,255,0.08);
+      display: none; margin-top: 20px;
+      background: rgba(255,255,255,0.05); border-radius: 12px;
+      padding: 16px 20px; border: 1px solid rgba(255,255,255,0.08);
     }
     .file-info.show { display: flex; align-items: center; gap: 12px; }
     .file-icon { font-size: 2rem; }
@@ -89,14 +63,9 @@
     .file-name { font-weight: 600; font-size: 0.95rem; color: #e0e0e0; word-break: break-all; }
     .file-size { font-size: 0.8rem; color: #888; margin-top: 2px; }
     .remove-btn {
-      background: rgba(255,60,60,0.2);
-      border: 1px solid rgba(255,60,60,0.3);
-      color: #ff6b6b;
-      border-radius: 6px;
-      padding: 4px 10px;
-      cursor: pointer;
-      font-size: 0.8rem;
-      transition: background 0.2s;
+      background: rgba(255,60,60,0.2); border: 1px solid rgba(255,60,60,0.3);
+      color: #ff6b6b; border-radius: 6px; padding: 4px 10px;
+      cursor: pointer; font-size: 0.8rem; transition: background 0.2s;
     }
     .remove-btn:hover { background: rgba(255,60,60,0.35); }
     .settings { margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -105,25 +74,16 @@
       margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;
     }
     .setting-group select {
-      width: 100%;
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 8px;
-      color: #e0e0e0;
-      padding: 10px 12px;
-      font-size: 0.9rem;
-      appearance: none;
-      cursor: pointer;
+      width: 100%; background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 8px;
+      color: #e0e0e0; padding: 10px 12px; font-size: 0.9rem;
+      appearance: none; cursor: pointer;
     }
     .setting-group select:focus { outline: 1px solid #00d2ff; }
     .size-estimate {
-      grid-column: 1 / -1;
-      background: rgba(0,210,255,0.08);
-      border: 1px solid rgba(0,210,255,0.2);
-      border-radius: 10px;
-      padding: 12px 16px;
-      font-size: 0.85rem;
-      color: #aaa;
+      grid-column: 1 / -1; background: rgba(0,210,255,0.08);
+      border: 1px solid rgba(0,210,255,0.2); border-radius: 10px;
+      padding: 12px 16px; font-size: 0.85rem; color: #aaa;
     }
     .size-estimate span { color: #00d2ff; font-weight: 600; }
     .size-estimate .warn { color: #ffaa00; }
@@ -144,20 +104,15 @@
     .progress-pct { color: #00d2ff; font-weight: 600; }
     .progress-bar-wrap { background: rgba(255,255,255,0.08); border-radius: 100px; height: 8px; overflow: hidden; }
     .progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg, #00d2ff, #7b2ff7);
+      height: 100%; background: linear-gradient(90deg, #00d2ff, #7b2ff7);
       border-radius: 100px; width: 0%; transition: width 0.3s ease;
     }
     .progress-status { margin-top: 8px; font-size: 0.8rem; color: #666; text-align: center; }
-    .loading-dots::after { content: ''; animation: dots 1.5s steps(4, end) infinite; }
-    @keyframes dots {
-      0%   { content: ''; } 25%  { content: '.'; }
-      50%  { content: '..'; } 75%  { content: '...'; } 100% { content: ''; }
-    }
+    .loading-dots::after { content: ''; animation: dots 1.5s steps(4,end) infinite; }
+    @keyframes dots { 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} 100%{content:''} }
     .result-section {
       display: none; margin-top: 24px;
-      background: rgba(0,230,118,0.08);
-      border: 1px solid rgba(0,230,118,0.25);
+      background: rgba(0,230,118,0.08); border: 1px solid rgba(0,230,118,0.25);
       border-radius: 14px; padding: 20px 24px; text-align: center;
     }
     .result-section.show { display: block; }
@@ -181,31 +136,30 @@
     .convert-another:hover { border-color: rgba(255,255,255,0.35); color: #ccc; }
     .error-box {
       display: none; margin-top: 16px;
-      background: rgba(255,60,60,0.1);
-      border: 1px solid rgba(255,60,60,0.3);
+      background: rgba(255,60,60,0.1); border: 1px solid rgba(255,60,60,0.3);
       border-radius: 10px; padding: 14px 18px;
       font-size: 0.85rem; color: #ff8a80; white-space: pre-line;
     }
     .error-box.show { display: block; }
     .loader-overlay {
       display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.7); z-index: 999;
+      background: rgba(0,0,0,0.75); z-index: 999;
       align-items: center; justify-content: center;
       flex-direction: column; gap: 16px;
     }
     .loader-overlay.show { display: flex; }
     .spinner {
-      width: 48px; height: 48px;
+      width: 52px; height: 52px;
       border: 4px solid rgba(255,255,255,0.1);
       border-top-color: #00d2ff;
       border-radius: 50%; animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loader-text { color: #aaa; font-size: 0.9rem; text-align: center; }
+    .loader-text { color: #ccc; font-size: 0.95rem; text-align: center; line-height: 1.6; }
+    .loader-sub { color: #555; font-size: 0.78rem; margin-top: 4px; }
     .tips {
       margin-top: 28px; border-top: 1px solid rgba(255,255,255,0.06);
-      padding-top: 20px; display: grid;
-      grid-template-columns: repeat(3, 1fr); gap: 12px;
+      padding-top: 20px; display: grid; grid-template-columns: repeat(3,1fr); gap: 12px;
     }
     .tip {
       background: rgba(255,255,255,0.03); border-radius: 10px;
@@ -224,11 +178,12 @@
 <div class="loader-overlay" id="loaderOverlay">
   <div class="spinner"></div>
   <div class="loader-text" id="loaderText">กำลังโหลด FFmpeg<span class="loading-dots"></span></div>
+  <div class="loader-sub" id="loaderSub">ครั้งแรกใช้เวลานาน 30–60 วินาที เนื่องจากต้องดาวน์โหลด WASM ~30MB</div>
 </div>
 
 <div class="container">
   <h1>🎬 Video → Audio</h1>
-  <p class="subtitle">แปลงไฟล์วิดีโอเป็นไฟล์เสียง · ประมวลผลในเครื่องของคุณ ไม่มีการอัปโหลด</p>
+  <p class="subtitle">แปลงไฟล์วิดีโอเป็นไฟล์เสียง · ประมวลผลในเครื่อง ไม่มีการอัปโหลด</p>
 
   <div class="drop-zone" id="dropZone">
     <span class="drop-icon">📁</span>
@@ -291,8 +246,7 @@
     <div class="result-icon">✅</div>
     <div class="result-title">แปลงสำเร็จ!</div>
     <div class="result-info" id="resultInfo">-</div>
-    <a class="download-btn" id="downloadLink" href="#" download>⬇️ ดาวน์โหลดไฟล์เสียง</a>
-    <br />
+    <a class="download-btn" id="downloadLink" href="#" download>⬇️ ดาวน์โหลดไฟล์เสียง</a><br />
     <button class="convert-another" onclick="resetAll()">แปลงไฟล์ใหม่</button>
   </div>
 
@@ -304,213 +258,201 @@
 </div>
 
 <script type="module">
-  // @ffmpeg/ffmpeg v0.12 single-threaded — no SharedArrayBuffer / no coi-serviceworker needed
-  import { FFmpeg } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/esm/ffmpeg.js';
+import { FFmpeg } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/esm/ffmpeg.js';
+import { toBlobURL } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js';
 
-  const CORE_URL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.4/dist/umd/ffmpeg-core.js';
-  const WASM_URL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.4/dist/umd/ffmpeg-core.wasm';
+const CORE_BASE = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.4/dist/umd';
 
-  let ffmpegInst = null;
-  let isLoaded = false;
-  let selectedFile = null;
-  let outputURL = null;
+let ff = null;
+let isLoaded = false;
+let selectedFile = null;
+let outputURL = null;
 
-  async function toUint8Array(file) {
-    return new Uint8Array(await file.arrayBuffer());
-  }
+async function loadFFmpeg() {
+  document.getElementById('loaderOverlay').classList.add('show');
+  try {
+    ff = new FFmpeg();
+    ff.on('log', ({ type, message }) => console.log(`[ffmpeg:${type}]`, message));
+    ff.on('progress', ({ progress }) => {
+      const pct = Math.round(Math.min(Math.max(progress, 0), 1) * 100);
+      if (pct > 0) setProgress(pct, `ประมวลผล ${pct}%`);
+    });
 
-  async function loadFFmpeg() {
-    showLoader('กำลังโหลด FFmpeg<br/><small style="font-size:0.75rem;color:#666">ครั้งแรกนานประมาณ 30-60 วินาที</small>');
-    try {
-      ffmpegInst = new FFmpeg();
-      ffmpegInst.on('log', ({ message }) => console.log('[ffmpeg]', message));
-      ffmpegInst.on('progress', ({ progress }) => {
-        const pct = Math.round(Math.min(progress, 1) * 100);
-        updateProgress(pct, `ประมวลผล ${pct}%`);
-      });
-      await ffmpegInst.load({ coreURL: CORE_URL, wasmURL: WASM_URL });
-      isLoaded = true;
-      hideLoader();
-    } catch (e) {
-      hideLoader();
-      showError('โหลด FFmpeg ไม่สำเร็จ: ' + e.message + '\nลองรีเฟรชหน้าเว็บหรือเปลี่ยนเบราว์เซอร์ (แนะนำ Chrome/Edge)');
-    }
-  }
+    setLoaderText('ดาวน์โหลด FFmpeg core…');
+    const coreURL = await toBlobURL(`${CORE_BASE}/ffmpeg-core.js`, 'text/javascript');
 
-  // Drop zone
-  const dropZone = document.getElementById('dropZone');
-  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-  dropZone.addEventListener('drop', e => {
-    e.preventDefault();
-    dropZone.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  });
-  document.getElementById('fileInput').addEventListener('change', e => {
-    if (e.target.files[0]) handleFile(e.target.files[0]);
-  });
+    setLoaderText('ดาวน์โหลด WASM binary (~30MB)…');
+    const wasmURL = await toBlobURL(`${CORE_BASE}/ffmpeg-core.wasm`, 'application/wasm');
 
-  function handleFile(file) {
-    selectedFile = file;
-    document.getElementById('fileName').textContent = file.name;
-    document.getElementById('fileSize').textContent = formatBytes(file.size);
-    document.getElementById('fileInfo').classList.add('show');
-    document.getElementById('settingsSection').style.display = 'grid';
-    document.getElementById('convertBtn').disabled = false;
-    document.getElementById('resultSection').classList.remove('show');
-    document.getElementById('errorBox').classList.remove('show');
-    updateEstimate();
-    autoSelectBitrate(file.size);
-  }
+    setLoaderText('เริ่มต้น FFmpeg…');
+    await ff.load({ coreURL, wasmURL });
 
-  function removeFile() {
-    selectedFile = null;
-    document.getElementById('fileInput').value = '';
-    document.getElementById('fileInfo').classList.remove('show');
-    document.getElementById('settingsSection').style.display = 'none';
-    document.getElementById('convertBtn').disabled = true;
-    document.getElementById('progressSection').classList.remove('show');
-    document.getElementById('resultSection').classList.remove('show');
-    document.getElementById('errorBox').classList.remove('show');
+    isLoaded = true;
+  } catch (e) {
+    showError('โหลด FFmpeg ไม่สำเร็จ: ' + e.message +
+      '\nลองรีเฟรชหน้าเว็บหรือเปลี่ยนเบราว์เซอร์ (แนะนำ Chrome/Edge)');
+  } finally {
+    document.getElementById('loaderOverlay').classList.remove('show');
   }
+}
 
-  function autoSelectBitrate(fileSizeBytes) {
-    const estimatedDurationSec = (fileSizeBytes * 8) / (1 * 1024 * 1024);
-    const maxBits = 200 * 1024 * 1024 * 8;
-    const maxBitrate = Math.floor(maxBits / estimatedDurationSec / 1000);
-    const bitrates = [320, 256, 192, 128, 96, 64];
-    const select = document.getElementById('bitrateSelect');
-    const suitable = bitrates.find(b => b <= maxBitrate) || 64;
-    select.value = suitable.toString();
-    updateEstimate();
-  }
+function setLoaderText(t) {
+  document.getElementById('loaderText').textContent = t;
+}
 
-  function updateEstimate() {
-    if (!selectedFile) return;
-    const bitrate = parseInt(document.getElementById('bitrateSelect').value);
-    const format = document.getElementById('formatSelect').value;
-    const estimatedDurationSec = (selectedFile.size * 8) / (1 * 1024 * 1024);
-    let estimatedOutputBytes;
-    if (format === 'wav') {
-      estimatedOutputBytes = estimatedDurationSec * 44100 * 2 * 2;
-    } else if (format === 'flac') {
-      estimatedOutputBytes = estimatedDurationSec * 44100 * 2 * 2 * 0.6;
-    } else {
-      estimatedOutputBytes = (bitrate * 1000 / 8) * estimatedDurationSec;
-    }
-    const estMB = estimatedOutputBytes / (1024 * 1024);
-    const durationMin = Math.round(estimatedDurationSec / 60);
-    let cls = 'ok', note = '';
-    if (format === 'wav' || format === 'flac') {
-      cls = estMB > 200 ? 'warn' : 'ok';
-      note = format === 'wav' ? ' (WAV ไม่บีบอัด อาจมีขนาดใหญ่)' : ' (FLAC lossless)';
-    } else if (estMB > 200) {
-      cls = 'warn';
-      note = ' ⚠️ ลองลด Bitrate เพื่อให้ไม่เกิน 200 MB';
-    }
-    document.getElementById('sizeEstimate').innerHTML =
-      `ประมาณระยะเวลา: ~${durationMin} นาที &nbsp;|&nbsp; ขนาดเสียงโดยประมาณ: <span class="${cls}">${estMB.toFixed(1)} MB</span>${note}`;
-  }
+// ---------- File handling ----------
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) handleFile(f);
+});
+document.getElementById('fileInput').addEventListener('change', e => {
+  if (e.target.files[0]) handleFile(e.target.files[0]);
+});
 
-  async function startConvert() {
-    if (!selectedFile) return;
-    if (!isLoaded) {
-      await loadFFmpeg();
-      if (!isLoaded) return;
-    }
-    const format = document.getElementById('formatSelect').value;
-    const bitrate = document.getElementById('bitrateSelect').value;
-    document.getElementById('convertBtn').disabled = true;
-    document.getElementById('progressSection').classList.add('show');
-    document.getElementById('resultSection').classList.remove('show');
-    document.getElementById('errorBox').classList.remove('show');
-    updateProgress(0, 'กำลังอ่านไฟล์...');
-    try {
-      if (outputURL) { URL.revokeObjectURL(outputURL); outputURL = null; }
-      const inputName = 'input.' + getExt(selectedFile.name);
-      const outputName = 'output.' + format;
-      updateProgress(5, 'กำลังโหลดไฟล์เข้าหน่วยความจำ...');
-      await ffmpegInst.writeFile(inputName, await toUint8Array(selectedFile));
-      updateProgress(10, 'กำลังแปลงไฟล์...');
-      const args = ['-i', inputName];
-      if (format === 'wav') {
-        args.push('-vn', '-acodec', 'pcm_s16le', '-ar', '44100', '-ac', '2');
-      } else if (format === 'flac') {
-        args.push('-vn', '-acodec', 'flac', '-ar', '44100', '-ac', '2');
-      } else if (format === 'aac') {
-        args.push('-vn', '-acodec', 'aac', '-b:a', bitrate + 'k');
-      } else if (format === 'ogg') {
-        args.push('-vn', '-acodec', 'libvorbis', '-b:a', bitrate + 'k');
-      } else {
-        args.push('-vn', '-acodec', 'libmp3lame', '-b:a', bitrate + 'k', '-q:a', '2');
-      }
-      args.push(outputName);
-      await ffmpegInst.exec(args);
-      updateProgress(95, 'กำลังสร้างไฟล์...');
-      const data = await ffmpegInst.readFile(outputName);
-      const blob = new Blob([data.buffer], { type: getMimeType(format) });
-      outputURL = URL.createObjectURL(blob);
-      await ffmpegInst.deleteFile(inputName).catch(() => {});
-      await ffmpegInst.deleteFile(outputName).catch(() => {});
-      updateProgress(100, 'เสร็จสิ้น!');
-      const outName = removeExt(selectedFile.name) + '.' + format;
-      document.getElementById('downloadLink').href = outputURL;
-      document.getElementById('downloadLink').download = outName;
-      document.getElementById('resultInfo').textContent =
-        `ขนาดไฟล์เสียง: ${formatBytes(blob.size)} | รูปแบบ: ${format.toUpperCase()} | Bitrate: ${format === 'wav' || format === 'flac' ? 'lossless' : bitrate + ' kbps'}`;
-      document.getElementById('resultSection').classList.add('show');
-      document.getElementById('progressSection').classList.remove('show');
-    } catch (e) {
-      console.error(e);
-      showError('เกิดข้อผิดพลาด: ' + e.message);
-      document.getElementById('progressSection').classList.remove('show');
-    } finally {
-      document.getElementById('convertBtn').disabled = false;
-    }
-  }
+function handleFile(file) {
+  selectedFile = file;
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileSize').textContent = fmtBytes(file.size);
+  document.getElementById('fileInfo').classList.add('show');
+  document.getElementById('settingsSection').style.display = 'grid';
+  document.getElementById('convertBtn').disabled = false;
+  document.getElementById('resultSection').classList.remove('show');
+  document.getElementById('errorBox').classList.remove('show');
+  updateEstimate();
+  autoSelectBitrate(file.size);
+}
 
-  function updateProgress(pct, status) {
-    document.getElementById('progressBar').style.width = pct + '%';
-    document.getElementById('progressPct').textContent = pct + '%';
-    if (status) document.getElementById('progressStatus').textContent = status;
+function removeFile() {
+  selectedFile = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('fileInfo').classList.remove('show');
+  document.getElementById('settingsSection').style.display = 'none';
+  document.getElementById('convertBtn').disabled = true;
+  document.getElementById('progressSection').classList.remove('show');
+  document.getElementById('resultSection').classList.remove('show');
+  document.getElementById('errorBox').classList.remove('show');
+}
+
+function autoSelectBitrate(bytes) {
+  const dur = (bytes * 8) / (1024 * 1024);
+  const max = Math.floor((200 * 1024 * 1024 * 8) / dur / 1000);
+  const opts = [320, 256, 192, 128, 96, 64];
+  document.getElementById('bitrateSelect').value = String(opts.find(b => b <= max) || 64);
+  updateEstimate();
+}
+
+function updateEstimate() {
+  if (!selectedFile) return;
+  const br = parseInt(document.getElementById('bitrateSelect').value);
+  const fmt = document.getElementById('formatSelect').value;
+  const dur = (selectedFile.size * 8) / (1024 * 1024);
+  let outBytes = fmt === 'wav' ? dur * 44100 * 4
+               : fmt === 'flac' ? dur * 44100 * 4 * 0.6
+               : (br * 1000 / 8) * dur;
+  const mb = outBytes / (1024 * 1024);
+  const min = Math.round(dur / 60);
+  let cls = mb > 200 ? 'warn' : 'ok';
+  let note = fmt === 'wav' ? ' (WAV ไม่บีบอัด อาจใหญ่)'
+           : fmt === 'flac' ? ' (FLAC lossless)'
+           : mb > 200 ? ' ⚠️ ลองลด Bitrate' : '';
+  document.getElementById('sizeEstimate').innerHTML =
+    `ระยะเวลา: ~${min} นาที &nbsp;|ขนาดเสียง: <span class="${cls}">${mb.toFixed(1)} MB</span>${note}`;
+}
+
+// ---------- Convert ----------
+async function startConvert() {
+  if (!selectedFile) return;
+  if (!isLoaded) {
+    await loadFFmpeg();
+    if (!isLoaded) return;
   }
-  function showError(msg) {
-    const box = document.getElementById('errorBox');
-    box.textContent = '❌ ' + msg;
-    box.classList.add('show');
-  }
-  function showLoader(text) {
-    document.getElementById('loaderText').innerHTML = text + '<br/><span class="loading-dots"></span>';
-    document.getElementById('loaderOverlay').classList.add('show');
-  }
-  function hideLoader() { document.getElementById('loaderOverlay').classList.remove('show'); }
-  function formatBytes(bytes) {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
-    if (bytes < 1024*1024*1024) return (bytes/(1024*1024)).toFixed(1) + ' MB';
-    return (bytes/(1024*1024*1024)).toFixed(2) + ' GB';
-  }
-  function getExt(name) { return name.split('.').pop().toLowerCase() || 'mp4'; }
-  function removeExt(name) { return name.replace(/\.[^/.]+$/, ''); }
-  function getMimeType(fmt) {
-    const map = { mp3: 'audio/mpeg', aac: 'audio/aac', wav: 'audio/wav', ogg: 'audio/ogg', flac: 'audio/flac' };
-    return map[fmt] || 'audio/mpeg';
-  }
-  function resetAll() {
-    removeFile();
+  const fmt = document.getElementById('formatSelect').value;
+  const br  = document.getElementById('bitrateSelect').value;
+
+  document.getElementById('convertBtn').disabled = true;
+  document.getElementById('progressSection').classList.add('show');
+  document.getElementById('resultSection').classList.remove('show');
+  document.getElementById('errorBox').classList.remove('show');
+  setProgress(0, 'กำลังอ่านไฟล์เข้าหน่วยความจำ…');
+
+  try {
     if (outputURL) { URL.revokeObjectURL(outputURL); outputURL = null; }
+
+    const inName  = 'in.' + ext(selectedFile.name);
+    const outName = 'out.' + fmt;
+
+    setProgress(5, 'โหลดไฟล์เข้า memory…');
+    await ff.writeFile(inName, new Uint8Array(await selectedFile.arrayBuffer()));
+
+    setProgress(10, 'แปลงไฟล์…');
+    const args = ['-i', inName, '-vn'];
+    if (fmt === 'mp3')  args.push('-c:a','libmp3lame','-b:a',br+'k','-q:a','2');
+    else if (fmt === 'aac')  args.push('-c:a','aac','-b:a',br+'k');
+    else if (fmt === 'ogg')  args.push('-c:a','libvorbis','-b:a',br+'k');
+    else if (fmt === 'wav')  args.push('-c:a','pcm_s16le','-ar','44100','-ac','2');
+    else if (fmt === 'flac') args.push('-c:a','flac','-ar','44100','-ac','2');
+    args.push(outName);
+
+    const code = await ff.exec(args);
+    if (code !== 0) throw new Error(`FFmpeg exit code ${code}`);
+
+    setProgress(95, 'สร้างไฟล์สำเร็จ…');
+    const data = await ff.readFile(outName);
+    const blob = new Blob([data.buffer], { type: mime(fmt) });
+    outputURL = URL.createObjectURL(blob);
+
+    await ff.deleteFile(inName).catch(()=>{});
+    await ff.deleteFile(outName).catch(()=>{});
+
+    setProgress(100, 'เสร็จสิ้น!');
+    document.getElementById('downloadLink').href = outputURL;
+    document.getElementById('downloadLink').download = noExt(selectedFile.name) + '.' + fmt;
+    document.getElementById('resultInfo').textContent =
+      `ขนาด: ${fmtBytes(blob.size)} | ${fmt.toUpperCase()} | ${
+        fmt==='wav'||fmt==='flac' ? 'lossless' : br+' kbps'}`;
+    document.getElementById('resultSection').classList.add('show');
+    document.getElementById('progressSection').classList.remove('show');
+
+  } catch (e) {
+    console.error(e);
+    showError('เกิดข้อผิดพลาด: ' + e.message);
+    document.getElementById('progressSection').classList.remove('show');
+  } finally {
+    document.getElementById('convertBtn').disabled = false;
   }
+}
 
-  // Expose to window for inline onclick handlers
-  window.startConvert = startConvert;
-  window.removeFile = removeFile;
-  window.resetAll = resetAll;
-  window.updateEstimate = updateEstimate;
+// ---------- Helpers ----------
+function setProgress(pct, status) {
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = pct + '%';
+  if (status) document.getElementById('progressStatus').textContent = status;
+}
+function showError(msg) {
+  const b = document.getElementById('errorBox');
+  b.textContent = '❌ ' + msg;
+  b.classList.add('show');
+}
+function fmtBytes(n) {
+  if (n<1024) return n+' B';
+  if (n<1048576) return (n/1024).toFixed(1)+' KB';
+  if (n<1073741824) return (n/1048576).toFixed(1)+' MB';
+  return (n/1073741824).toFixed(2)+' GB';
+}
+function ext(name)   { return name.split('.').pop().toLowerCase() || 'mp4'; }
+function noExt(name) { return name.replace(/\.[^/.]+$/,''); }
+function mime(fmt)   { return {mp3:'audio/mpeg',aac:'audio/aac',wav:'audio/wav',ogg:'audio/ogg',flac:'audio/flac'}[fmt]||'audio/mpeg'; }
+function resetAll()  { removeFile(); if (outputURL){URL.revokeObjectURL(outputURL);outputURL=null;} }
 
-  // Preload FFmpeg in background
-  loadFFmpeg();
+// Expose for onclick
+Object.assign(window, { startConvert, removeFile, resetAll, updateEstimate });
+
+// Pre-load FFmpeg on page load
+loadFFmpeg();
 </script>
-
 </body>
 </html>
