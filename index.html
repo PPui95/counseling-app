@@ -4,11 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Video → Audio Converter</title>
-  <!-- coi-serviceworker hosted locally for same-origin SW registration -->
   <script src="./coi-serviceworker.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
@@ -19,7 +17,6 @@
       color: #e0e0e0;
       padding: 20px;
     }
-
     .container {
       background: rgba(255,255,255,0.05);
       backdrop-filter: blur(10px);
@@ -30,7 +27,6 @@
       max-width: 680px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     }
-
     h1 {
       text-align: center;
       font-size: 2rem;
@@ -41,14 +37,7 @@
       background-clip: text;
       margin-bottom: 8px;
     }
-
-    .subtitle {
-      text-align: center;
-      color: #888;
-      font-size: 0.9rem;
-      margin-bottom: 32px;
-    }
-
+    .subtitle { text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 32px; }
     .drop-zone {
       border: 2px dashed rgba(0,210,255,0.4);
       border-radius: 16px;
@@ -57,20 +46,16 @@
       cursor: pointer;
       transition: all 0.3s ease;
       background: rgba(0,210,255,0.03);
-      position: relative;
     }
-
     .drop-zone:hover, .drop-zone.drag-over {
       border-color: #00d2ff;
       background: rgba(0,210,255,0.08);
       transform: scale(1.01);
     }
-
     .drop-icon { font-size: 3.5rem; margin-bottom: 16px; display: block; }
     .drop-zone h3 { font-size: 1.1rem; color: #ccc; margin-bottom: 8px; }
     .drop-zone p { color: #666; font-size: 0.85rem; }
     #fileInput { display: none; }
-
     .browse-btn {
       display: inline-block;
       margin-top: 16px;
@@ -85,7 +70,6 @@
       transition: opacity 0.2s;
     }
     .browse-btn:hover { opacity: 0.85; }
-
     .file-info {
       display: none;
       margin-top: 20px;
@@ -99,7 +83,6 @@
     .file-details { flex: 1; }
     .file-name { font-weight: 600; font-size: 0.95rem; color: #e0e0e0; word-break: break-all; }
     .file-size { font-size: 0.8rem; color: #888; margin-top: 2px; }
-
     .remove-btn {
       background: rgba(255,60,60,0.2);
       border: 1px solid rgba(255,60,60,0.3);
@@ -111,14 +94,7 @@
       transition: background 0.2s;
     }
     .remove-btn:hover { background: rgba(255,60,60,0.35); }
-
-    .settings {
-      margin-top: 24px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-
+    .settings { margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .setting-group label {
       display: block;
       font-size: 0.8rem;
@@ -127,7 +103,6 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-
     .setting-group select {
       width: 100%;
       background: rgba(255,255,255,0.07);
@@ -140,7 +115,6 @@
       cursor: pointer;
     }
     .setting-group select:focus { outline: 1px solid #00d2ff; }
-
     .size-estimate {
       grid-column: 1 / -1;
       background: rgba(0,210,255,0.08);
@@ -153,7 +127,6 @@
     .size-estimate span { color: #00d2ff; font-weight: 600; }
     .size-estimate .warn { color: #ffaa00; }
     .size-estimate .ok { color: #00e676; }
-
     .convert-btn {
       display: block;
       width: 100%;
@@ -171,7 +144,6 @@
     }
     .convert-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
     .convert-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
     .progress-section { display: none; margin-top: 24px; }
     .progress-section.show { display: block; }
     .progress-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem; }
@@ -186,7 +158,6 @@
       transition: width 0.3s ease;
     }
     .progress-status { margin-top: 8px; font-size: 0.8rem; color: #666; text-align: center; }
-
     .loading-dots::after { content: ''; animation: dots 1.5s steps(4, end) infinite; }
     @keyframes dots {
       0%   { content: ''; }
@@ -195,7 +166,6 @@
       75%  { content: '...'; }
       100% { content: ''; }
     }
-
     .result-section {
       display: none;
       margin-top: 24px;
@@ -209,7 +179,6 @@
     .result-icon { font-size: 2.5rem; margin-bottom: 8px; }
     .result-title { font-size: 1.1rem; font-weight: 600; color: #00e676; margin-bottom: 4px; }
     .result-info { font-size: 0.85rem; color: #888; margin-bottom: 16px; }
-
     .download-btn {
       display: inline-block;
       padding: 12px 32px;
@@ -224,7 +193,6 @@
       transition: opacity 0.2s;
     }
     .download-btn:hover { opacity: 0.85; }
-
     .convert-another {
       display: inline-block;
       margin-top: 12px;
@@ -238,7 +206,6 @@
       transition: border-color 0.2s;
     }
     .convert-another:hover { border-color: rgba(255,255,255,0.35); color: #ccc; }
-
     .error-box {
       display: none;
       margin-top: 16px;
@@ -250,7 +217,6 @@
       color: #ff8a80;
     }
     .error-box.show { display: block; }
-
     .loader-overlay {
       display: none;
       position: fixed;
@@ -272,7 +238,6 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     .loader-text { color: #aaa; font-size: 0.9rem; }
-
     .tips {
       margin-top: 28px;
       border-top: 1px solid rgba(255,255,255,0.06);
@@ -290,7 +255,6 @@
       color: #666;
     }
     .tip-icon { font-size: 1.4rem; margin-bottom: 4px; }
-
     @media (max-width: 500px) {
       .settings { grid-template-columns: 1fr; }
       .tips { grid-template-columns: 1fr; }
@@ -384,27 +348,61 @@
   </div>
 </div>
 
-<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
-<script>
-  const FFmpegWASM = window.FFmpeg || {};
-  const { createFFmpeg, fetchFile } = FFmpegWASM;
+<!-- FFmpeg.wasm via jsDelivr (more reliable CORS than unpkg) -->
+<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 
+<script>
   let selectedFile = null;
   let ffmpeg = null;
   let isFFmpegLoaded = false;
   let outputURL = null;
+  let _fetchFile = null;
+
+  function getFFmpegAPI() {
+    // Support both window.FFmpeg.createFFmpeg and window.createFFmpeg patterns
+    const cf = (window.FFmpeg && window.FFmpeg.createFFmpeg) || window.createFFmpeg;
+    const ff = (window.FFmpeg && window.FFmpeg.fetchFile) || window.fetchFile;
+    return { createFFmpeg: cf, fetchFile: ff };
+  }
+
+  async function loadFFmpegScript() {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js';
+      s.onload = resolve;
+      s.onerror = () => reject(new Error('ไม่สามารถโหลด FFmpeg script'));
+      document.head.appendChild(s);
+    });
+  }
 
   async function loadFFmpeg() {
     showLoader('กำลังโหลด FFmpeg (ครั้งแรกอาจใช้เวลาสักครู่)');
     try {
-      ffmpeg = createFFmpeg({
+      let api = getFFmpegAPI();
+
+      // If CDN script didn't load yet, try loading it dynamically
+      if (!api.createFFmpeg) {
+        updateProgress(0, 'โหลด FFmpeg library...');
+        await loadFFmpegScript();
+        api = getFFmpegAPI();
+      }
+
+      if (typeof api.createFFmpeg !== 'function') {
+        throw new Error('ไม่พบ FFmpeg API (อาจถูก block โดย browser)');
+      }
+
+      _fetchFile = api.fetchFile;
+
+      ffmpeg = api.createFFmpeg({
         log: true,
         progress: ({ ratio }) => {
           const pct = Math.round(ratio * 100);
           updateProgress(pct, `ประมวลผล ${pct}%`);
         },
-        corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
+        corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
       });
+
+      updateProgress(0, 'กำลังเตรียม WASM core...');
       await ffmpeg.load();
       isFFmpegLoaded = true;
       hideLoader();
@@ -507,7 +505,7 @@
       const inputName = 'input.' + getExt(selectedFile.name);
       const outputName = 'output.' + format;
       updateProgress(5, 'กำลังโหลดไฟล์เข้าหน่วยความจำ...');
-      ffmpeg.FS('writeFile', inputName, await fetchFile(selectedFile));
+      ffmpeg.FS('writeFile', inputName, await _fetchFile(selectedFile));
       updateProgress(10, 'กำลังแปลงไฟล์...');
       const args = ['-i', inputName];
       if (format === 'wav') {
