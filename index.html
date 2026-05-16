@@ -65,7 +65,7 @@
     .spinner{width:52px;height:52px;border:4px solid rgba(255,255,255,.1);border-top-color:#00d2ff;border-radius:50%;animation:spin .8s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
     .loader-text{color:#ccc;font-size:.95rem;text-align:center;padding:0 20px}
-    .loader-sub{color:#555;font-size:.75rem;margin-top:3px;text-align:center;padding:0 20px}
+    .loader-sub{color:#666;font-size:.78rem;margin-top:4px;text-align:center}
     .tips{margin-top:24px;border-top:1px solid rgba(255,255,255,.06);padding-top:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
     .tip{background:rgba(255,255,255,.03);border-radius:10px;padding:10px;text-align:center;font-size:.73rem;color:#666}
     .tip-icon{font-size:1.3rem;margin-bottom:3px}
@@ -75,8 +75,8 @@
 <body>
 <div class="loader-overlay" id="loaderOverlay">
   <div class="spinner"></div>
-  <div class="loader-text" id="loaderText">กำลังโหลด FFmpeg…</div>
-  <div class="loader-sub" id="loaderSub">ครั้งแรกใช้เวลานาน 1–2 นาที กรุณารอ…</div>
+  <div class="loader-text" id="loaderText">กำลังโหลด FFmpeg core…</div>
+  <div class="loader-sub">ครั้งแรกโหลดนาน 1–2 นาที เนื่องจากไฟล์ WASM ขนาดใหญ่</div>
 </div>
 
 <div class="container">
@@ -123,7 +123,7 @@
         <option value="320">320 kbps</option>
       </select>
     </div>
-    <div class="size-estimate" id="sizeEstimate">เลือกไฟล์เพื่อประมาณขนาด</div>
+    <div class="size-estimate" id="sizeEstimate">เลือกไฟล์เพื่อดูประมาณขนาด</div>
   </div>
 
   <button class="convert-btn" id="convertBtn" disabled type="button">🎵 แปลงเป็นไฟล์เสียง</button>
@@ -154,36 +154,35 @@
   </div>
 </div>
 
+<!-- FFmpeg v0.12.6 UMD hosted locally (Worker must be same-origin) -->
+<script src="./ffmpeg.js"></script>
 <script>
 (function(){
   'use strict';
 
-  var VERSION = 'v5.0-ffmpeg12';
-  var ffInst = null;      // FFmpeg instance
-  var ffFetch = null;     // fetchFile function
+  var VERSION = 'v6.0-umd-local';
+  var ffInst = null;
   var isLoaded = false;
   var selectedFile = null;
   var outputURL = null;
 
-  /* ---- Status bar ---- */
+  /* ---- Status ---- */
   function setStatus(msg, type) {
     var el = document.getElementById('statusBar');
     el.textContent = msg;
-    var styles = {
-      ok:    'text-align:center;font-size:.8rem;padding:8px 12px;border-radius:8px;margin-bottom:16px;background:rgba(0,230,118,.1);color:#00e676;border:1px solid rgba(0,230,118,.3)',
-      err:   'text-align:center;font-size:.8rem;padding:8px 12px;border-radius:8px;margin-bottom:16px;background:rgba(255,60,60,.1);color:#ff6b6b;border:1px solid rgba(255,60,60,.3)',
-      info:  'text-align:center;font-size:.8rem;padding:8px 12px;border-radius:8px;margin-bottom:16px;background:rgba(0,210,255,.08);color:#00d2ff;border:1px solid rgba(0,210,255,.2)'
+    var s = {
+      ok:  'text-align:center;font-size:.8rem;padding:8px 12px;border-radius:8px;margin-bottom:16px;background:rgba(0,230,118,.1);color:#00e676;border:1px solid rgba(0,230,118,.3)',
+      err: 'text-align:center;font-size:.8rem;padding:8px 12px;border-radius:8px;margin-bottom:16px;background:rgba(255,60,60,.1);color:#ff6b6b;border:1px solid rgba(255,60,60,.3)',
+      def: 'text-align:center;font-size:.8rem;padding:8px 12px;border-radius:8px;margin-bottom:16px;background:rgba(0,210,255,.08);color:#00d2ff;border:1px solid rgba(0,210,255,.2)'
     };
-    el.style.cssText = styles[type] || styles.info;
+    el.style.cssText = s[type] || s.def;
   }
 
-  /* ---- Error display ---- */
   window.addEventListener('error', function(e){
     if (e.message) showError('[JS] ' + e.message + (e.lineno ? ' :'+e.lineno : ''));
   });
   window.addEventListener('unhandledrejection', function(e){
-    var msg = e.reason ? (e.reason.message || String(e.reason)) : 'promise error';
-    showError('[Promise] ' + msg);
+    showError('[Promise] ' + (e.reason && (e.reason.message || String(e.reason)) || 'unknown'));
   });
 
   /* ---- File handling ---- */
@@ -212,15 +211,12 @@
     document.getElementById('progressSection').classList.remove('show');
     document.getElementById('resultSection').classList.remove('show');
     document.getElementById('errorBox').classList.remove('show');
-    setStatus('พร้อมใช้งาน — ลากวางไฟล์หรือกด "เลือกไฟล์"');
+    setStatus('พร้อม — ลากวางไฟล์หรือกด "เลือกไฟล์"');
   }
 
-  /* ---- Drag & Drop (document-level) ---- */
+  /* ---- Drag & Drop ---- */
   document.addEventListener('dragenter', function(e){ e.preventDefault(); e.stopPropagation(); });
-  document.addEventListener('dragover', function(e){
-    e.preventDefault(); e.stopPropagation();
-    document.getElementById('dropZone').classList.add('drag-over');
-  });
+  document.addEventListener('dragover',  function(e){ e.preventDefault(); e.stopPropagation(); document.getElementById('dropZone').classList.add('drag-over'); });
   document.addEventListener('dragleave', function(e){
     if (!e.relatedTarget || e.relatedTarget === document.documentElement)
       document.getElementById('dropZone').classList.remove('drag-over');
@@ -229,26 +225,18 @@
     e.preventDefault(); e.stopPropagation();
     document.getElementById('dropZone').classList.remove('drag-over');
     var files = e.dataTransfer && e.dataTransfer.files;
-    if (files && files.length > 0) handleFile(files[0]);
+    if (files && files.length) handleFile(files[0]);
     else setStatus('ไม่พบไฟล์ ลองกด "เลือกไฟล์" แทน', 'err');
   });
 
-  /* ---- Browse button ---- */
-  document.getElementById('browseBtn').addEventListener('click', function(e){
-    e.stopPropagation();
-    document.getElementById('fileInput').click();
-  });
-  document.getElementById('fileInput').addEventListener('change', function(e){
-    if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
-  });
+  /* ---- Browse ---- */
+  document.getElementById('browseBtn').addEventListener('click', function(e){ e.stopPropagation(); document.getElementById('fileInput').click(); });
+  document.getElementById('fileInput').addEventListener('change', function(e){ if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]); });
 
-  /* ---- Other buttons ---- */
+  /* ---- Buttons ---- */
   document.getElementById('removeBtn').addEventListener('click', removeFile);
   document.getElementById('convertBtn').addEventListener('click', startConvert);
-  document.getElementById('anotherBtn').addEventListener('click', function(){
-    removeFile();
-    if (outputURL) { URL.revokeObjectURL(outputURL); outputURL = null; }
-  });
+  document.getElementById('anotherBtn').addEventListener('click', function(){ removeFile(); if (outputURL) { URL.revokeObjectURL(outputURL); outputURL = null; } });
   document.getElementById('formatSelect').addEventListener('change', updateEstimate);
   document.getElementById('bitrateSelect').addEventListener('change', updateEstimate);
 
@@ -260,80 +248,57 @@
     document.getElementById('bitrateSelect').value = String(opts.find(function(b){ return b <= maxKbps; }) || 64);
     updateEstimate();
   }
-
   function updateEstimate() {
     if (!selectedFile) return;
     var br = parseInt(document.getElementById('bitrateSelect').value);
     var fmt = document.getElementById('formatSelect').value;
     var dur = (selectedFile.size * 8) / (1024 * 1024);
-    var outBytes = fmt === 'wav'  ? dur * 44100 * 4
-                 : fmt === 'flac' ? dur * 44100 * 4 * 0.6
-                 : (br * 1000 / 8) * dur;
+    var outBytes = fmt === 'wav' ? dur*44100*4 : fmt === 'flac' ? dur*44100*4*.6 : (br*1000/8)*dur;
     var mb = outBytes / (1024 * 1024);
-    var min = Math.round(Math.max(dur, 1) / 60);
-    var note = fmt === 'wav' ? ' (WAV ไม่บีบอัด)' : fmt === 'flac' ? ' (FLAC lossless)' : mb > 200 ? ' ⚠️ ลด Bitrate' : '';
-    document.getElementById('sizeEstimate').innerHTML =
-      'ระยะเวลา: ~' + min + ' นาที | ขนาด: <span class="' + (mb>200?'warn':'ok') + '">' + mb.toFixed(1) + ' MB</span>' + note;
+    var min = Math.round(Math.max(dur,1) / 60);
+    var note = fmt==='wav'?' (WAV ไม่บีบอัด)':fmt==='flac'?' (FLAC lossless)':mb>200?' ⚠️ ลด Bitrate':'';
+    document.getElementById('sizeEstimate').innerHTML = 'ระยะเวลา: ~'+min+' นาที | ขนาด: <span class="'+(mb>200?'warn':'ok')+'">'+mb.toFixed(1)+' MB</span>'+note;
   }
 
-  /* ---- toBlobURL helper (inline, no extra package needed) ---- */
-  function toBlobURL(url, mimeType) {
-    return fetch(url)
-      .then(function(r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status + ' fetching ' + url);
-        return r.arrayBuffer();
-      })
-      .then(function(buf) {
-        return URL.createObjectURL(new Blob([buf], { type: mimeType }));
-      });
+  /* ---- Read File as Uint8Array (no @ffmpeg/util needed) ---- */
+  function readFile(file) {
+    return new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function(e) { resolve(new Uint8Array(e.target.result)); };
+      reader.onerror = function() { reject(new Error('อ่านไฟล์ไม่ได้')); };
+      reader.readAsArrayBuffer(file);
+    });
   }
 
-  /* ---- Load FFmpeg v0.12 (single-threaded, no SharedArrayBuffer) ---- */
+  /* ---- Load FFmpeg ---- */
   function loadFFmpeg() {
-    var FFMPEG_ESM  = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/esm/ffmpeg.js';
-    var UTIL_ESM    = 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js';
-    var CORE_BASE   = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
+    return new Promise(function(resolve, reject) {
+      if (!window.FFmpegWASM || typeof window.FFmpegWASM.FFmpeg !== 'function') {
+        return reject(new Error('FFmpegWASM ไม่โหลด (window.FFmpegWASM=' + (typeof window.FFmpegWASM) + ')'));
+      }
+      document.getElementById('loaderOverlay').classList.add('show');
+      document.getElementById('loaderText').textContent = 'เริ่มต้น FFmpeg Worker…';
 
-    document.getElementById('loaderOverlay').classList.add('show');
-    document.getElementById('loaderText').textContent = 'โหลด FFmpeg module…';
-    document.getElementById('loaderSub').textContent = 'ครั้งแรกใช้เวลา 1–2 นาที';
-
-    return Promise.all([
-      import(FFMPEG_ESM),
-      import(UTIL_ESM)
-    ]).then(function(mods) {
-      var FFmpegClass = mods[0].FFmpeg;
-      var fetchFileF  = mods[1].fetchFile;
-
-      if (typeof FFmpegClass !== 'function')
-        throw new Error('import ไม่ได้ FFmpeg class (got: ' + typeof FFmpegClass + ')');
-
-      var ff = new FFmpegClass();
+      var ff = new window.FFmpegWASM.FFmpeg();
+      ff.on('log', function(msg) { console.log('[ffmpeg]', msg.message || msg); });
       ff.on('progress', function(p) {
         var pct = Math.round((p.progress || 0) * 100);
         setProgress(pct, 'ประมวลผล ' + pct + '%');
       });
-      ff.on('log', function(msg) {
-        console.log('[ffmpeg]', msg.message || msg);
-      });
 
-      document.getElementById('loaderText').textContent = 'โหลด WASM core… (~30 MB)';
-      document.getElementById('loaderSub').textContent = 'อาจใช้เวลา 30–60 วินาที';
+      document.getElementById('loaderText').textContent = 'โหลด FFmpeg core (~31 MB)…';
 
-      return Promise.all([
-        toBlobURL(CORE_BASE + '/ffmpeg-core.js',   'text/javascript'),
-        toBlobURL(CORE_BASE + '/ffmpeg-core.wasm', 'application/wasm')
-      ]).then(function(urls) {
-        return ff.load({ coreURL: urls[0], wasmURL: urls[1] });
+      ff.load({
+        coreURL: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js'
       }).then(function() {
-        ffInst   = ff;
-        ffFetch  = fetchFileF;
+        ffInst = ff;
         isLoaded = true;
         document.getElementById('loaderOverlay').classList.remove('show');
+        resolve();
+      }).catch(function(e) {
+        document.getElementById('loaderOverlay').classList.remove('show');
+        reject(e);
       });
-    }).catch(function(e) {
-      document.getElementById('loaderOverlay').classList.remove('show');
-      throw e;
     });
   }
 
@@ -364,16 +329,16 @@
     document.getElementById('resultSection').classList.remove('show');
     document.getElementById('errorBox').classList.remove('show');
     setProgress(0, 'เตรียม…');
-    setStatus('กำลังแปลงไฟล์…');
+    setStatus('กำลังแปลง…');
     if (outputURL) { URL.revokeObjectURL(outputURL); outputURL = null; }
 
-    Promise.resolve(ffFetch(selectedFile))
+    readFile(selectedFile)
       .then(function(data) {
-        setProgress(5, 'โหลดไฟล์เข้า memory…');
+        setProgress(5, 'เขียนไฟล์ลง memory…');
         return ffInst.writeFile(inName, data);
       })
       .then(function() {
-        setProgress(10, 'เริ่มแปลง…');
+        setProgress(10, 'แปลงไฟล์…');
         var args = ['-i', inName, '-vn'];
         if (fmt === 'mp3')       args.push('-acodec','libmp3lame','-b:a',br+'k','-q:a','2');
         else if (fmt === 'aac')  args.push('-acodec','aac','-b:a',br+'k');
@@ -384,16 +349,16 @@
         return ffInst.exec(args);
       })
       .then(function(ret) {
-        if (ret !== 0) throw new Error('FFmpeg exit code ' + ret);
-        setProgress(90, 'อ่านไฟล์สำเร็จ…');
+        if (ret !== 0) throw new Error('FFmpeg ออก exit code ' + ret);
+        setProgress(92, 'อ่านไฟล์สำเร็จ…');
         return ffInst.readFile(outName);
       })
       .then(function(data) {
-        var blob = new Blob([data.buffer], { type: mimeType(fmt) });
+        var blob = new Blob([data.buffer], { type: mimeOf(fmt) });
         outputURL = URL.createObjectURL(blob);
-        try { ffInst.deleteFile(inName);  } catch(e) {}
-        try { ffInst.deleteFile(outName); } catch(e) {}
-        setProgress(100, 'เสร็จสิ้น!');
+        try { ffInst.deleteFile(inName);  } catch(e2) {}
+        try { ffInst.deleteFile(outName); } catch(e2) {}
+        setProgress(100, 'เสร็จ!');
         document.getElementById('downloadLink').href     = outputURL;
         document.getElementById('downloadLink').download = noExt(selectedFile.name) + '.' + fmt;
         document.getElementById('resultInfo').textContent =
@@ -405,7 +370,6 @@
         setStatus('✅ แปลงสำเร็จ!', 'ok');
       })
       .catch(function(e) {
-        console.error(e);
         showError('เกิดข้อผิดพลาด: ' + e.message);
         document.getElementById('progressSection').classList.remove('show');
         document.getElementById('convertBtn').disabled = false;
@@ -419,22 +383,19 @@
     if (msg) document.getElementById('progressStatus').textContent = msg;
   }
   function showError(msg) {
-    var b = document.getElementById('errorBox');
-    b.textContent = '❌ ' + msg;
-    b.classList.add('show');
+    document.getElementById('errorBox').textContent = '❌ ' + msg;
+    document.getElementById('errorBox').classList.add('show');
     setStatus('❌ เกิดข้อผิดพลาด', 'err');
   }
   function fmtBytes(n) {
-    if (n < 1024) return n + ' B';
-    if (n < 1048576) return (n/1024).toFixed(1) + ' KB';
-    if (n < 1073741824) return (n/1048576).toFixed(1) + ' MB';
-    return (n/1073741824).toFixed(2) + ' GB';
+    if (n<1024) return n+' B';
+    if (n<1048576) return (n/1024).toFixed(1)+' KB';
+    if (n<1073741824) return (n/1048576).toFixed(1)+' MB';
+    return (n/1073741824).toFixed(2)+' GB';
   }
   function fileExt(n) { return (n.split('.').pop() || 'mp4').toLowerCase(); }
   function noExt(n)   { return n.replace(/\.[^/.]+$/, ''); }
-  function mimeType(f) {
-    return {mp3:'audio/mpeg',aac:'audio/aac',wav:'audio/wav',ogg:'audio/ogg',flac:'audio/flac'}[f] || 'audio/mpeg';
-  }
+  function mimeOf(f)  { return {mp3:'audio/mpeg',aac:'audio/aac',wav:'audio/wav',ogg:'audio/ogg',flac:'audio/flac'}[f]||'audio/mpeg'; }
 
   setStatus('✅ JS ' + VERSION + ' พร้อม — ลากวางไฟล์หรือกด "เลือกไฟล์"');
 })();
