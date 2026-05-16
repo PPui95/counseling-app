@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Video → Audio Converter</title>
-  <!-- Required for FFmpeg.wasm SharedArrayBuffer on GitHub Pages -->
-  <script src="https://unpkg.com/coi-serviceworker@0.1.7/coi-serviceworker.min.js"><\/script>
+  <!-- coi-serviceworker hosted locally for same-origin SW registration -->
+  <script src="./coi-serviceworker.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -384,15 +384,15 @@
   </div>
 </div>
 
-<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"><\/script>
+<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 <script>
   const FFmpegWASM = window.FFmpeg || {};
+  const { createFFmpeg, fetchFile } = FFmpegWASM;
+
   let selectedFile = null;
   let ffmpeg = null;
   let isFFmpegLoaded = false;
   let outputURL = null;
-
-  const { createFFmpeg, fetchFile } = FFmpegWASM;
 
   async function loadFFmpeg() {
     showLoader('กำลังโหลด FFmpeg (ครั้งแรกอาจใช้เวลาสักครู่)');
@@ -577,8 +577,9 @@
     removeFile();
     if (outputURL) { URL.revokeObjectURL(outputURL); outputURL = null; }
   }
+
   window.addEventListener('load', () => { setTimeout(() => loadFFmpeg(), 500); });
-<\/script>
+</script>
 
 </body>
 </html>
