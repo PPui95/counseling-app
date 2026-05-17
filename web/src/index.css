@@ -44,20 +44,15 @@ body {
 .hdr-title { font-size: 17px; font-weight: 700; line-height: 1.2; }
 .hdr-sub   { font-size: 12px; opacity: .8; }
 
-.key-chip {
-  padding: 7px 14px;
-  border: none;
+.hdr-badge {
+  padding: 6px 14px;
   border-radius: 20px;
-  font-family: 'Sarabun', sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  cursor: pointer;
-  background: rgba(255,255,255,.22);
+  background: rgba(255,255,255,.2);
   color: #fff;
   white-space: nowrap;
-  transition: background .15s;
 }
-.key-chip:hover { background: rgba(255,255,255,.35); }
 
 /* ── main ── */
 .main {
