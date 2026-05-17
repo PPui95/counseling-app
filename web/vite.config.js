@@ -3,5 +3,5 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/counseling-app/',
+  base: '/counseling-app/formatter/',
 });
