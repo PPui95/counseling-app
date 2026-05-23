@@ -72,8 +72,21 @@ async function withRetry(fn, maxRetries = 3) {
     } catch (err) {
       lastErr = err;
 
-      // 429 → wait the suggested delay then retry
+      // 429 → check if quota limit is 0 (Free Tier blocks image models entirely)
       if (err.statusCode === 429) {
+        const violations = err.body?.error?.details
+          ?.find((d) => d['@type']?.includes('QuotaFailure'))
+          ?.violations || [];
+
+        const hardBlocked = violations.some((v) => v.quotaId?.includes('FreeTier'));
+        if (hardBlocked) {
+          console.error('\n⚠️  Image generation is NOT available on the Free Tier.');
+          console.error('   Your quota limit is 0 — this is a plan restriction, not a rate limit.');
+          console.error('   ➜  Upgrade to a Paid plan: https://ai.dev/projects\n');
+          throw err;
+        }
+
+        // Regular rate-limit → retry with backoff
         const retryDelay = err.body?.error?.details
           ?.find((d) => d['@type']?.includes('RetryInfo'))
           ?.retryDelay;
