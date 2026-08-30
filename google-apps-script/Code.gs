@@ -16,7 +16,13 @@ function doPost(e) {
 function handleRequest(e) {
   try {
     const params = e.parameter;
-    const body = e.postData ? JSON.parse(e.postData.contents) : {};
+    // Support payload param (GET with JSON) or POST body
+    let body = {};
+    if (params.payload) {
+      try { body = JSON.parse(decodeURIComponent(params.payload)); } catch(ex) {}
+    } else if (e.postData) {
+      try { body = JSON.parse(e.postData.contents); } catch(ex) {}
+    }
     const action = params.action || body.action;
 
     let result;
