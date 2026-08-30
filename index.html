@@ -475,10 +475,10 @@ textarea.form-input { min-height: 80px; resize: vertical; }
     <button class="btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
 
     <div class="demo-section">
-      <p>บัญชีทดลองใช้</p>
+      <p>ทดลองใช้งานได้เลย (ไม่ต้องกรอก)</p>
       <div class="demo-btns">
-        <button class="demo-btn" onclick="fillDemo('counselor')">👨‍⚕️ นักจิตวิทยา</button>
-        <button class="demo-btn" onclick="fillDemo('client')">👤 ผู้รับบริการ</button>
+        <button class="demo-btn" onclick="quickLogin('counselor')">👨‍⚕️ นักจิตวิทยา</button>
+        <button class="demo-btn" onclick="quickLogin('client')">👤 ผู้รับบริการ</button>
       </div>
     </div>
   </div>
@@ -1136,6 +1136,17 @@ function fillDemo(r){
   if(r==='counselor'){document.getElementById('loginEmail').value='counselor@example.com';}
   else{document.getElementById('loginEmail').value='client@example.com';}
   document.getElementById('loginPass').value='password123';
+}
+async function quickLogin(role){
+  currentRole = role;
+  currentUser = role==='counselor'
+    ? {id:'demo-counselor',fullName:'ดร. สุภาพร จิตใจดี',email:'counselor@example.com',role:'counselor'}
+    : {id:'demo-client',fullName:'สมชาย ใจดี',email:'client@example.com',role:'client'};
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  await loadAllData();
+  setupApp();
+  showToast('🚀 เข้าสู่โหมดทดลองใช้งาน!');
 }
 async function doLogin(){
   const email=document.getElementById('loginEmail').value.trim();
