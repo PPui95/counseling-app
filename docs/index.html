@@ -1007,6 +1007,33 @@ textarea.form-input { min-height: 80px; resize: vertical; }
 </div>
 
 <script>
+/* ══════════ GOOGLE SHEETS API ══════════ */
+const GS_URL = 'https://script.google.com/macros/s/AKfycbyXVwSHhocwmdIJQKx7CIuw8FyjtLS0fif7E-DS6qhzoWP6yJwdh1kEIEEqvUP1MU-NjQ/exec';
+let currentUser = null;
+
+async function callAPI(action, data = {}) {
+  try {
+    const res = await fetch(GS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, ...data }),
+      redirect: 'follow',
+      mode: 'cors'
+    });
+    return await res.json();
+  } catch (err) {
+    console.warn('API error:', err);
+    return { error: err.message };
+  }
+}
+
+function showToast(msg, ok=true){
+  let t=document.getElementById('gsToast');
+  if(!t){t=document.createElement('div');t.id='gsToast';t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:20px;font-size:.85rem;font-weight:600;z-index:9999;transition:opacity .4s';document.body.appendChild(t);}
+  t.textContent=msg;t.style.background=ok?'var(--mint)':'var(--coral)';t.style.color='#fff';t.style.opacity='1';
+  setTimeout(()=>t.style.opacity='0',2500);
+}
+
 /* ══════════ STATE ══════════ */
 let currentRole = 'counselor';
 let currentPage = 'dashboard';
@@ -1106,34 +1133,81 @@ function selectRole(r){
 }
 function fillDemo(r){
   selectRole(r);
-  document.getElementById('loginPass').value='demo1234';
+  if(r==='counselor'){document.getElementById('loginEmail').value='counselor@example.com';}
+  else{document.getElementById('loginEmail').value='client@example.com';}
+  document.getElementById('loginPass').value='password123';
 }
-function doLogin(){
-  const email=document.getElementById('loginEmail').value;
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
   const pass=document.getElementById('loginPass').value;
   if(!email||!pass){alert('กรุณากรอกอีเมลและรหัสผ่าน');return;}
-  currentRole = selectedRole;
+  const btn=document.querySelector('#screen-login .btn-mint');
+  if(btn){btn.textContent='⏳ กำลังเข้าสู่ระบบ...';btn.disabled=true;}
+  const res = await callAPI('login', { email, password: pass });
+  if(btn){btn.textContent='เข้าสู่ระบบ';btn.disabled=false;}
+  if(res.error){
+    // Fallback: demo mode (offline)
+    if(email.includes('counselor')){currentRole='counselor';currentUser={id:'demo-c',fullName:'ดร. สุภาพร จิตใจดี',email};}
+    else{currentRole='client';currentUser={id:'demo-u',fullName:'สมชาย ใจดี',email};}
+    showToast('⚠️ ใช้โหมดออฟไลน์ ('+res.error+')',false);
+  } else {
+    currentUser = res.user;
+    currentRole = res.user.role;
+    showToast('✅ เข้าสู่ระบบสำเร็จ!');
+  }
   document.getElementById('screen-login').classList.remove('active');
   document.getElementById('screen-app').classList.add('active');
+  await loadAllData();
   setupApp();
 }
 function doLogout(){
+  currentUser=null;
+  sessions=[];assessHistory=[];
   document.getElementById('screen-app').classList.remove('active');
   document.getElementById('screen-login').classList.add('active');
 }
+async function loadAllData(){
+  if(!currentUser) return;
+  try {
+    if(currentRole==='counselor'){
+      const [sRes] = await Promise.all([
+        callAPI('getSessions',{counselorId:currentUser.id})
+      ]);
+      if(sRes.sessions) sessions = sRes.sessions.map(s=>({
+        id:s.id,client:s.clientName,date:s.date,duration:Number(s.duration),
+        problem:s.presentingProblem,techniques:s.techniques?s.techniques.split(','):[],
+        notes:s.notes,followUp:s.followUpPlan
+      }));
+    } else {
+      const [aRes,mRes] = await Promise.all([
+        callAPI('getAssessments',{userId:currentUser.id}),
+        callAPI('getMoods',{userId:currentUser.id})
+      ]);
+      if(aRes.assessments) assessHistory = aRes.assessments.map(a=>({
+        type:a.type==='PHQ9'?'PHQ-9':a.type==='GAD7'?'GAD-7':'SWLS',
+        score:Number(a.score),max:a.type==='PHQ9'?27:a.type==='GAD7'?21:35,
+        severity:a.severity,date:new Date(a.takenAt).toLocaleDateString('th-TH')
+      }));
+      if(mRes.moods) moodData = mRes.moods.map(m=>({mood:Number(m.mood),date:m.recordedAt}));
+    }
+  } catch(e){ console.warn('loadAllData error',e); }
+}
 function setupApp(){
   const isC = currentRole==='counselor';
+  const name = currentUser?.fullName || (isC?'ดร. สุภาพร':'สมชาย ใจดี');
+  const email = currentUser?.email || (isC?'counselor@example.com':'client@example.com');
   document.getElementById('nav-counselor').style.display = isC?'block':'none';
   document.getElementById('nav-client').style.display = isC?'none':'block';
   document.getElementById('sidebarRole').textContent = isC?'นักจิตวิทยา':'ผู้รับบริการ';
-  document.getElementById('userAvatar').textContent = isC?'ส':'ส';
+  document.getElementById('userAvatar').textContent = name.charAt(0)||'ส';
   document.getElementById('userAvatar').style.background = isC?'var(--mint)':'var(--sky)';
-  document.getElementById('userName').textContent = isC?'ดร. สุภาพร':'สมชาย ใจดี';
-  document.getElementById('userEmail').textContent = isC?'counselor@demo.com':'client@demo.com';
+  document.getElementById('userName').textContent = name;
+  document.getElementById('userEmail').textContent = email;
   const h = new Date().getHours();
   const g = h<12?'สวัสดีตอนเช้า':h<17?'สวัสดีตอนบ่าย':'สวัสดีตอนเย็น';
-  if(isC) document.getElementById('greetingText').textContent = g+', ดร. สุภาพร 👋';
-  else document.getElementById('clientGreeting').textContent = g+', สมชาย 👋';
+  const firstName = name.split(' ')[0];
+  if(isC) document.getElementById('greetingText').textContent = g+', '+firstName+' 👋';
+  else document.getElementById('clientGreeting').textContent = g+', '+firstName+' 👋';
   showPage(isC?'dashboard':'client-home');
   drawCharts();
 }
@@ -1179,14 +1253,22 @@ function openNewSession(){
   openModal('sessionModal');
 }
 function toggleTech(btn,t){btn.classList.toggle('on');if(selectedTechs.includes(t))selectedTechs=selectedTechs.filter(x=>x!==t);else selectedTechs.push(t);}
-function saveSession(){
+async function saveSession(){
   const cn=document.getElementById('sClientName').value.trim();
   const pr=document.getElementById('sProblem').value.trim();
   if(!cn||!pr){alert('กรุณากรอกชื่อผู้รับบริการและปัญหา');return;}
-  sessions.unshift({id:Date.now(),client:cn,date:document.getElementById('sDate').value,duration:parseInt(document.getElementById('sDuration').value)||60,problem:pr,techniques:[...selectedTechs],notes:document.getElementById('sNotes').value,followUp:document.getElementById('sFollowUp').value});
+  const s={id:Date.now().toString(),client:cn,date:document.getElementById('sDate').value,duration:parseInt(document.getElementById('sDuration').value)||60,problem:pr,techniques:[...selectedTechs],notes:document.getElementById('sNotes').value,followUp:document.getElementById('sFollowUp').value};
+  sessions.unshift(s);
   renderSessions();closeModal('sessionModal');showPage('sessions');
+  const res = await callAPI('saveSession',{
+    id:s.id,counselorId:currentUser?.id||'demo',clientId:'client-1',
+    clientName:s.client,date:s.date,duration:s.duration,presentingProblem:s.problem,
+    techniques:s.techniques,notes:s.notes,followUpPlan:s.followUp
+  });
+  if(res.success) showToast('💾 บันทึกลง Google Sheet แล้ว!');
+  else showToast('⚠️ บันทึกเฉพาะในเครื่อง',false);
 }
-function deleteSession(id){if(confirm('ลบบันทึกนี้?')){sessions=sessions.filter(s=>s.id!==id);renderSessions();}}
+function deleteSession(id){if(confirm('ลบบันทึกนี้?')){sessions=sessions.filter(s=>s.id!==id);renderSessions();showToast('🗑 ลบแล้ว');}}
 
 /* ══════════ CLIENTS ══════════ */
 function showClientDetail(name,initial,color,sessions,phq9sev,gad7score,gad7sev,note){
@@ -1284,10 +1366,13 @@ function assessNext(){
 }
 function assessPrev(){if(assessCurrent>0){assessCurrent--;renderAssessQ();}}
 function cancelAssessment(){document.getElementById('assessFlow').style.display='none';document.getElementById('assessList').style.display='block';}
-function showAssessResult(){
+async function showAssessResult(){
   const a=ASSESSMENTS[assessType];
   const r=a.score(assessAnswers);
   assessHistory.unshift({type:assessType==='PHQ9'?'PHQ-9':assessType==='GAD7'?'GAD-7':'SWLS',score:r.s,max:a.max,severity:r.sev,date:new Date().toLocaleDateString('th-TH')});
+  callAPI('saveAssessment',{userId:currentUser?.id||'demo',type:assessType,answers:assessAnswers,score:r.s,severity:r.sev,interpretation:r.note}).then(res=>{
+    if(res.success) showToast('📊 บันทึกผลประเมินลง Google Sheet แล้ว!');
+  });
   renderAssessHistory();
   document.getElementById('resultBody').innerHTML=`
     <div class="result-hero">
@@ -1303,10 +1388,20 @@ function showAssessResult(){
 }
 
 /* ══════════ MOOD ══════════ */
-function selectMood(btn, val){
+async function selectMood(btn, val){
   document.querySelectorAll('.mood-btn-sel').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  setTimeout(()=>{btn.parentElement.insertAdjacentHTML('afterend','<div style="margin-top:12px;padding:10px;background:var(--mint-light);border-radius:8px;font-size:.88rem;color:var(--mint-dark);text-align:center">✅ บันทึกอารมณ์เรียบร้อย!</div>');},300);
+  const note = document.getElementById('moodNote')?.value||'';
+  callAPI('saveMood',{userId:currentUser?.id||'demo',mood:val,note,recordedAt:new Date().toISOString()}).then(res=>{
+    const msg = res.success ? '✅ บันทึกอารมณ์ลง Google Sheet แล้ว!' : '✅ บันทึกอารมณ์เรียบร้อย!';
+    setTimeout(()=>{
+      const prev = btn.parentElement.nextElementSibling;
+      if(prev&&prev.id==='moodResult') prev.remove();
+      const div=document.createElement('div');div.id='moodResult';
+      div.style.cssText='margin-top:12px;padding:10px;background:var(--mint-light);border-radius:8px;font-size:.88rem;color:var(--mint-dark);text-align:center';
+      div.textContent=msg;btn.parentElement.insertAdjacentElement('afterend',div);
+    },300);
+  });
 }
 
 /* ══════════ MODAL ══════════ */
