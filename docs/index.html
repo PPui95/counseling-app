@@ -257,6 +257,25 @@ a { color: inherit; text-decoration: none; }
 }
 .sidebar-overlay.open { display: block; }
 
+/* Bottom nav for mobile */
+.bottom-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--surface); border-top: 1px solid var(--border);
+  z-index: 300; padding: 6px 0 env(safe-area-inset-bottom, 6px);
+}
+.bottom-nav-inner { display: flex; justify-content: space-around; }
+.bnav-item {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 3px; padding: 8px 16px; border-radius: 12px;
+  font-size: .62rem; font-weight: 600; color: var(--text-3);
+  cursor: pointer; transition: all .15s; min-width: 60px; min-height: 52px;
+  justify-content: center;
+}
+.bnav-item .bnav-icon { font-size: 1.4rem; line-height: 1; }
+.bnav-item.active { color: var(--mint); }
+.bnav-item.active .bnav-icon { transform: scale(1.1); }
+
 @media (max-width: 900px) {
   #screen-app { flex-direction: column; }
   .sidebar {
@@ -266,8 +285,20 @@ a { color: inherit; text-decoration: none; }
   }
   .sidebar.open { left: 0 !important; }
   .mobile-topbar { display: flex; }
-  .page { padding: 16px; }
+  .bottom-nav { display: block; }
+  .page { padding: 14px 14px 90px; } /* 90px = bottom nav height */
   .content-area { isolation: auto; }
+
+  /* Bigger touch targets */
+  .btn, .btn-mint, .btn-outline { min-height: 46px; font-size: .95rem; padding: 10px 18px; }
+  .btn-sm { min-height: 38px; }
+  .form-input { min-height: 48px; font-size: 1rem; padding: 12px 14px; }
+  .nav-item { min-height: 48px; font-size: .95rem; }
+  .card { padding: 16px; }
+  .modal-box { padding: 20px; border-radius: 20px 20px 0 0; max-height: 92vh; overflow-y: auto; }
+  .modal-overlay { align-items: flex-end; }
+  table { font-size: .82rem; }
+  td, th { padding: 8px 6px; }
 }
 
 /* Content */
@@ -527,6 +558,24 @@ textarea.form-input { min-height: 80px; resize: vertical; }
     <button class="hamburger-btn" onclick="doLogout()" title="ออกจากระบบ" style="font-size:.9rem">🚪</button>
   </div>
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+  <!-- Bottom Navigation (mobile) -->
+  <nav class="bottom-nav" id="bottomNav">
+    <div class="bottom-nav-inner" id="bnavCounselor">
+      <div class="bnav-item active" onclick="showPage('dashboard')"><span class="bnav-icon">🏠</span>หน้าหลัก</div>
+      <div class="bnav-item" onclick="showPage('sessions')"><span class="bnav-icon">📋</span>บันทึก</div>
+      <div class="bnav-item" onclick="showPage('clients')"><span class="bnav-icon">👥</span>ผู้รับบริการ</div>
+      <div class="bnav-item" onclick="showPage('chat-c')"><span class="bnav-icon">💬</span>แชท</div>
+      <div class="bnav-item" onclick="showPage('profile-c')"><span class="bnav-icon">👤</span>โปรไฟล์</div>
+    </div>
+    <div class="bottom-nav-inner" id="bnavClient" style="display:none">
+      <div class="bnav-item active" onclick="showPage('client-home')"><span class="bnav-icon">🏠</span>หน้าหลัก</div>
+      <div class="bnav-item" onclick="showPage('assessments')"><span class="bnav-icon">📊</span>ประเมิน</div>
+      <div class="bnav-item" onclick="showPage('chat-cl')"><span class="bnav-icon">💬</span>แชท</div>
+      <div class="bnav-item" onclick="showPage('progress')"><span class="bnav-icon">📈</span>ความคืบหน้า</div>
+      <div class="bnav-item" onclick="showPage('profile-cl')"><span class="bnav-icon">👤</span>โปรไฟล์</div>
+    </div>
+  </nav>
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
@@ -1054,16 +1103,25 @@ const GS_URL = 'https://script.google.com/macros/s/AKfycbyXVwSHhocwmdIJQKx7CIuw8
 let currentUser = null;
 
 async function callAPI(action, data = {}) {
-  // ส่งผ่าน GET params เพื่อหลีก CORS preflight ของ Google Apps Script
   try {
-    const payload = encodeURIComponent(JSON.stringify({ action, ...data }));
-    const url = `${GS_URL}?action=${action}&payload=${payload}`;
-    const res = await fetch(url, { redirect: 'follow' });
+    // วิธีที่ผ่าน CORS ของ Google Apps Script: POST ไม่ใส่ Content-Type
+    const body = JSON.stringify({ action, ...data });
+    const res = await fetch(GS_URL, { method:'POST', body, redirect:'follow' });
     const text = await res.text();
-    try { return JSON.parse(text); } catch { return { raw: text }; }
+    try { return JSON.parse(text); }
+    catch { return { raw: text, success: text.includes('success') }; }
   } catch (err) {
-    console.warn('GS API error:', err);
-    return { error: err.message };
+    // Fallback: JSONP-style via script tag
+    return new Promise(resolve => {
+      const cb = 'gs_cb_' + Date.now();
+      window[cb] = r => { delete window[cb]; resolve(r); };
+      const s = document.createElement('script');
+      const p = new URLSearchParams({ action, callback: cb, ...Object.fromEntries(Object.entries(data).map(([k,v])=>[k, typeof v==='object'?JSON.stringify(v):v])) });
+      s.src = GS_URL + '?' + p;
+      s.onerror = () => { delete window[cb]; resolve({error:'network'}); };
+      document.head.appendChild(s);
+      setTimeout(()=>{ if(window[cb]){delete window[cb]; resolve({error:'timeout'});} }, 8000);
+    });
   }
 }
 
@@ -1249,6 +1307,8 @@ function setupApp(){
   const email = currentUser?.email || (isC?'counselor@example.com':'client@example.com');
   document.getElementById('nav-counselor').style.display = isC?'block':'none';
   document.getElementById('nav-client').style.display = isC?'none':'block';
+  document.getElementById('bnavCounselor').style.display = isC?'flex':'none';
+  document.getElementById('bnavClient').style.display = isC?'none':'flex';
   document.getElementById('sidebarRole').textContent = isC?'นักจิตวิทยา':'ผู้รับบริการ';
   document.getElementById('userAvatar').textContent = name.charAt(0)||'ส';
   document.getElementById('userAvatar').style.background = isC?'var(--mint)':'var(--sky)';
@@ -1289,8 +1349,12 @@ function showPage(id){
   });
   document.querySelector('.content-area').scrollTop=0;
   if(id==='progress') setTimeout(drawCharts,100);
+  // Sync bottom nav active
+  document.querySelectorAll('.bnav-item').forEach(b=>{
+    const onclick = b.getAttribute('onclick')||'';
+    b.classList.toggle('active', onclick.includes(`'${id}'`));
+  });
   closeSidebar();
-  // Push browser history
   history.pushState({page:id},'',location.pathname+'#'+id);
 }
 // Browser back button support
