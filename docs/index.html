@@ -1013,17 +1013,25 @@ let currentUser = null;
 
 async function callAPI(action, data = {}) {
   try {
+    // Google Apps Script ต้องการ POST แบบนี้ (ไม่มี Content-Type header เพื่อหลีก CORS preflight)
+    const body = JSON.stringify({ action, ...data });
     const res = await fetch(GS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, ...data }),
-      redirect: 'follow',
-      mode: 'cors'
+      body,
+      redirect: 'follow'
     });
-    return await res.json();
+    const text = await res.text();
+    try { return JSON.parse(text); } catch { return { raw: text }; }
   } catch (err) {
-    console.warn('API error:', err);
-    return { error: err.message };
+    // Fallback: ลอง GET แทน
+    try {
+      const params = new URLSearchParams({ action, payload: JSON.stringify(data) });
+      const res2 = await fetch(`${GS_URL}?${params}`, { redirect: 'follow' });
+      return await res2.json();
+    } catch (err2) {
+      console.warn('API error:', err2);
+      return { error: err2.message };
+    }
   }
 }
 
