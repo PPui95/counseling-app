@@ -236,6 +236,38 @@ a { color: inherit; text-decoration: none; }
 .logout-btn { margin-left: auto; font-size: .82rem; color: var(--text-3); padding: 4px; }
 .logout-btn:hover { color: var(--coral); }
 
+/* Mobile top bar */
+.mobile-topbar {
+  display: none; align-items: center; gap: 12px;
+  padding: 12px 16px; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+}
+.mobile-topbar .brand-name { font-size: 1rem; font-weight: 800; color: var(--mint); flex: 1; }
+.hamburger-btn {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: var(--surface-alt); display: flex; align-items: center;
+  justify-content: center; font-size: 1.2rem; cursor: pointer; flex-shrink: 0;
+}
+/* Sidebar overlay on mobile */
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.4); z-index: 199;
+}
+.sidebar-overlay.open { display: block; }
+
+@media (max-width: 768px) {
+  #screen-app { flex-direction: column; }
+  .sidebar {
+    position: fixed; left: -260px; top: 0; bottom: 0;
+    z-index: 200; transition: left .25s; width: 240px;
+    box-shadow: 4px 0 24px rgba(0,0,0,.12);
+  }
+  .sidebar.open { left: 0; }
+  .mobile-topbar { display: flex; }
+  .page { padding: 16px; }
+}
+
 /* Content */
 .content-area {
   flex: 1; overflow-y: auto; background: var(--body-bg);
@@ -486,6 +518,14 @@ textarea.form-input { min-height: 80px; resize: vertical; }
 
 <!-- ══════════ APP SHELL ══════════ -->
 <div id="screen-app" class="screen">
+  <!-- Mobile Top Bar -->
+  <div class="mobile-topbar" id="mobileTopbar">
+    <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+    <span class="brand-name">🌿 จิตใจดี</span>
+    <button class="hamburger-btn" onclick="doLogout()" title="ออกจากระบบ" style="font-size:.9rem">🚪</button>
+  </div>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
@@ -1231,8 +1271,22 @@ function setupApp(){
   drawCharts();
 }
 
+/* ══════════ SIDEBAR MOBILE ══════════ */
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar');
+  const ov=document.getElementById('sidebarOverlay');
+  sb.classList.toggle('open');
+  ov.classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
 /* ══════════ NAVIGATION ══════════ */
+const pageHistory = [];
 function showPage(id){
+  if(currentPage && currentPage!==id) pageHistory.push(currentPage);
   currentPage = id;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -1243,7 +1297,21 @@ function showPage(id){
   });
   document.querySelector('.content-area').scrollTop=0;
   if(id==='progress') setTimeout(drawCharts,100);
+  closeSidebar();
+  // Push browser history
+  history.pushState({page:id},'',location.pathname+'#'+id);
 }
+// Browser back button support
+window.addEventListener('popstate', e=>{
+  if(e.state?.page) {
+    currentPage = e.state.page;
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+e.state.page)?.classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n=>{
+      n.classList.toggle('active', n.getAttribute('onclick')?.includes(`'${e.state.page}'`));
+    });
+  }
+});
 
 /* ══════════ SESSIONS ══════════ */
 function renderSessions(){
