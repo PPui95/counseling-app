@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>จิตใจดี</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+
+<style>
+/* ── Tokens ── */
+:root {
+  --mint:        #3DAA7D;
+  --mint-dark:   #2B8A62;
+  --mint-light:  #EDF7F2;
+  --mint-mid:    #C5E8D8;
+  --sky:         #6BAED6;
+  --sky-light:   #E3F3FB;
+  --sage:        #F4FAF7;
+  --surface:     #FFFFFF;
+  --surface-alt: #F0F6F3;
+  --text:        #1A2E28;
+  --text-2:      #4A6B60;
+  --text-3:      #8AADA4;
+  --border:      #D4E9E1;
+  --coral:       #E07B6A;
+  --amber:       #E6A94A;
+  --green-ok:    #52B788;
+  --body-bg:     #F4FAF7;
+  --card-shadow: 0 1px 3px rgba(29,68,55,.07), 0 4px 16px rgba(29,68,55,.05);
+  --radius:      14px;
+  --radius-sm:   9px;
+  --sidebar-w:   230px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --mint:        #4EC490;
+    --mint-dark:   #3DAA7D;
+    --mint-light:  #132B22;
+    --mint-mid:    #1E4034;
+    --sky:         #7DC4E8;
+    --sky-light:   #0E2533;
+    --sage:        #0E1C18;
+    --surface:     #162820;
+    --surface-alt: #1C3329;
+    --text:        #D8EDE6;
+    --text-2:      #8BBFAF;
+    --text-3:      #4A7A6A;
+    --border:      #1E4034;
+    --coral:       #E8907F;
+    --amber:       #F0BB6A;
+    --green-ok:    #5DD4A0;
+    --body-bg:     #0E1C18;
+    --card-shadow: 0 1px 3px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"] {
+  --mint:        #4EC490;
+  --mint-dark:   #3DAA7D;
+  --mint-light:  #132B22;
+  --mint-mid:    #1E4034;
+  --sky:         #7DC4E8;
+  --sky-light:   #0E2533;
+  --sage:        #0E1C18;
+  --surface:     #162820;
+  --surface-alt: #1C3329;
+  --text:        #D8EDE6;
+  --text-2:      #8BBFAF;
+  --text-3:      #4A7A6A;
+  --border:      #1E4034;
+  --coral:       #E8907F;
+  --amber:       #F0BB6A;
+  --green-ok:    #5DD4A0;
+  --body-bg:     #0E1C18;
+  --card-shadow: 0 1px 3px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body {
+  font-family: 'Noto Sans Thai', 'Inter', system-ui, sans-serif;
+  background: var(--body-bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+input, textarea { font-family: inherit; }
+a { color: inherit; text-decoration: none; }
+
+/* ── Screens ── */
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; }
+
+/* ══════════════════════════════
+   LOGIN
+══════════════════════════════ */
+#screen-login {
+  align-items: center; justify-content: center;
+  background: linear-gradient(150deg, var(--mint-light) 0%, var(--sky-light) 100%);
+  padding: 24px;
+}
+.login-card {
+  background: var(--surface);
+  border-radius: 24px;
+  padding: 44px 40px 36px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--card-shadow), 0 0 0 1px var(--border);
+}
+.login-logo {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.login-logo .icon {
+  width: 68px; height: 68px; border-radius: 22px;
+  background: var(--mint-light);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 34px; margin-bottom: 14px;
+  border: 2px solid var(--mint-mid);
+}
+.login-logo h1 {
+  font-size: 1.75rem; font-weight: 800; color: var(--mint);
+  letter-spacing: -.5px;
+}
+.login-logo p { font-size: .85rem; color: var(--text-2); margin-top: 3px; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: .82rem; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+.form-input {
+  width: 100%; padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  color: var(--text);
+  font-size: .9rem;
+  transition: border-color .15s;
+  outline: none;
+}
+.form-input:focus { border-color: var(--mint); background: var(--surface); }
+.btn-primary {
+  width: 100%; padding: 13px;
+  background: var(--mint); color: #fff;
+  border-radius: var(--radius-sm);
+  font-size: .95rem; font-weight: 700;
+  margin-top: 6px;
+  transition: background .15s, transform .1s;
+}
+.btn-primary:hover { background: var(--mint-dark); }
+.btn-primary:active { transform: scale(.98); }
+.demo-section { margin-top: 24px; text-align: center; }
+.demo-section p { font-size: .8rem; color: var(--text-3); margin-bottom: 10px; }
+.demo-btns { display: flex; gap: 10px; }
+.demo-btn {
+  flex: 1; padding: 10px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: .82rem; font-weight: 600;
+  background: var(--surface-alt);
+  color: var(--text-2);
+  transition: all .15s;
+}
+.demo-btn:hover { border-color: var(--mint); color: var(--mint); background: var(--mint-light); }
+.role-switch { display: flex; gap: 8px; margin-bottom: 20px; }
+.role-btn {
+  flex: 1; padding: 10px;
+  border-radius: 10px; border: 2px solid var(--border);
+  font-size: .82rem; font-weight: 600; color: var(--text-2);
+  background: var(--surface-alt);
+  text-align: center; transition: all .15s;
+}
+.role-btn.active { border-color: var(--mint); color: var(--mint); background: var(--mint-light); }
+
+/* ══════════════════════════════
+   APP SHELL
+══════════════════════════════ */
+#screen-app {
+  flex-direction: row;
+  height: 100vh; overflow: hidden;
+}
+/* Sidebar */
+.sidebar {
+  width: var(--sidebar-w); flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  padding: 24px 14px 20px;
+  height: 100vh; overflow-y: auto;
+}
+.sidebar-brand {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 6px; margin-bottom: 28px;
+}
+.sidebar-brand .brand-icon {
+  width: 38px; height: 38px; border-radius: 11px;
+  background: var(--mint); display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.sidebar-brand .brand-name { font-size: 1rem; font-weight: 800; color: var(--mint); }
+.sidebar-brand .brand-role { font-size: .72rem; color: var(--text-3); margin-top: 1px; }
+.sidebar-section { margin-bottom: 20px; }
+.sidebar-label {
+  font-size: .7rem; font-weight: 700; letter-spacing: .08em;
+  color: var(--text-3); padding: 0 10px; margin-bottom: 4px;
+  text-transform: uppercase;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 10px;
+  font-size: .88rem; font-weight: 500; color: var(--text-2);
+  margin-bottom: 2px; cursor: pointer; transition: all .15s;
+}
+.nav-item:hover { background: var(--surface-alt); color: var(--text); }
+.nav-item.active { background: var(--mint-light); color: var(--mint); font-weight: 700; }
+.nav-item .nav-icon { width: 20px; text-align: center; font-size: 1rem; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto; background: var(--coral);
+  color: #fff; border-radius: 10px;
+  font-size: .7rem; font-weight: 700;
+  padding: 1px 7px; min-width: 20px; text-align: center;
+}
+.sidebar-user {
+  margin-top: auto; padding-top: 16px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.user-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--mint); color: #fff;
+  font-weight: 700; font-size: .9rem;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.user-name { font-size: .82rem; font-weight: 700; color: var(--text); }
+.user-email { font-size: .72rem; color: var(--text-3); }
+.logout-btn { margin-left: auto; font-size: .82rem; color: var(--text-3); padding: 4px; }
+.logout-btn:hover { color: var(--coral); }
+
+/* Content */
+.content-area {
+  flex: 1; overflow-y: auto; background: var(--body-bg);
+}
+.page { display: none; padding: 32px; max-width: 1100px; }
+.page.active { display: block; }
+
+/* Page header */
+.page-header { margin-bottom: 28px; }
+.page-header h2 { font-size: 1.5rem; font-weight: 800; color: var(--text); }
+.page-header p { font-size: .88rem; color: var(--text-2); margin-top: 4px; }
+.page-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+.page-header-row h2 { font-size: 1.4rem; font-weight: 800; }
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border);
+}
+.card-sm { padding: 14px 16px; }
+
+/* Grid helpers */
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* Stat card */
+.stat-card {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 18px 20px; border: 1px solid var(--border);
+  box-shadow: var(--card-shadow);
+}
+.stat-icon { font-size: 1.4rem; margin-bottom: 10px; }
+.stat-value { font-size: 1.7rem; font-weight: 800; font-family: 'Inter', sans-serif; color: var(--text); }
+.stat-label { font-size: .8rem; color: var(--text-2); margin-top: 3px; }
+.stat-card.accent-mint { border-top: 3px solid var(--mint); }
+.stat-card.accent-sky { border-top: 3px solid var(--sky); }
+.stat-card.accent-amber { border-top: 3px solid var(--amber); }
+.stat-card.accent-coral { border-top: 3px solid var(--coral); }
+
+/* Badge */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: .75rem; font-weight: 700;
+}
+.badge-mint { background: var(--mint-light); color: var(--mint-dark); }
+.badge-sky { background: var(--sky-light); color: #3a7fbf; }
+.badge-coral { background: #fdf0ee; color: var(--coral); }
+.badge-amber { background: #fdf6e8; color: #b57b1a; }
+.badge-green { background: #e8f7f1; color: var(--green-ok); }
+
+/* Technique chip */
+.chip {
+  display: inline-block; padding: 4px 10px;
+  background: var(--mint-light); color: var(--mint-dark);
+  border-radius: 20px; font-size: .75rem; font-weight: 600;
+  margin: 3px 3px 3px 0;
+}
+
+/* Table */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: .78rem; font-weight: 700; color: var(--text-3); padding: 10px 14px; border-bottom: 1px solid var(--border); }
+td { padding: 12px 14px; font-size: .88rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--surface-alt); }
+
+/* Button variants */
+.btn { padding: 9px 18px; border-radius: var(--radius-sm); font-size: .88rem; font-weight: 700; cursor: pointer; transition: all .15s; border: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn-mint { background: var(--mint); color: #fff; }
+.btn-mint:hover { background: var(--mint-dark); }
+.btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text-2); }
+.btn-outline:hover { border-color: var(--mint); color: var(--mint); background: var(--mint-light); }
+.btn-sm { padding: 6px 12px; font-size: .8rem; }
+
+/* Section title */
+.section-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 14px; }
+
+/* ── Progress bars ── */
+.progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 3px; transition: width .4s; }
+
+/* ── Chat ── */
+.chat-layout { display: flex; height: calc(100vh - 88px); gap: 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); background: var(--surface); }
+.chat-sidebar { width: 280px; border-right: 1px solid var(--border); overflow-y: auto; }
+.chat-room-item { padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background .1s; }
+.chat-room-item:hover, .chat-room-item.active { background: var(--mint-light); }
+.chat-room-avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--mint); color: #fff; font-weight: 700; font-size: 1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.chat-room-name { font-size: .9rem; font-weight: 700; color: var(--text); }
+.chat-room-last { font-size: .78rem; color: var(--text-3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+.chat-main { flex: 1; display: flex; flex-direction: column; }
+.chat-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.msg { display: flex; align-items: flex-end; gap: 8px; max-width: 72%; }
+.msg.mine { align-self: flex-end; flex-direction: row-reverse; }
+.msg-bubble { padding: 10px 14px; border-radius: 16px; font-size: .88rem; line-height: 1.5; }
+.msg.other .msg-bubble { background: var(--surface-alt); border: 1px solid var(--border); color: var(--text); border-bottom-left-radius: 4px; }
+.msg.mine .msg-bubble { background: var(--mint); color: #fff; border-bottom-right-radius: 4px; }
+.msg-time { font-size: .7rem; color: var(--text-3); margin-bottom: 4px; flex-shrink: 0; }
+.chat-input-bar { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 10px; align-items: center; }
+.chat-input { flex: 1; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 22px; font-size: .88rem; color: var(--text); background: var(--surface-alt); outline: none; }
+.chat-input:focus { border-color: var(--mint); background: var(--surface); }
+.chat-send-btn { width: 42px; height: 42px; border-radius: 50%; background: var(--mint); color: #fff; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .15s; }
+.chat-send-btn:hover { background: var(--mint-dark); }
+
+/* ── Assessment ── */
+.assess-card { max-width: 680px; }
+.assess-option {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-radius: 10px;
+  border: 1.5px solid var(--border); margin-bottom: 8px;
+  cursor: pointer; transition: all .15s; background: var(--surface-alt);
+}
+.assess-option:hover, .assess-option.selected {
+  border-color: var(--mint); background: var(--mint-light);
+}
+.assess-radio {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid var(--border); flex-shrink: 0;
+  transition: all .15s;
+}
+.assess-option.selected .assess-radio {
+  border-color: var(--mint); background: var(--mint);
+  box-shadow: inset 0 0 0 3px var(--mint-light);
+}
+.assess-option-text { font-size: .9rem; color: var(--text); }
+
+/* ── Progress charts ── */
+.chart-container { height: 160px; position: relative; }
+canvas { display: block; }
+
+/* ── Mood tracker ── */
+.mood-row { display: flex; gap: 10px; }
+.mood-btn-sel {
+  flex: 1; padding: 12px 6px; border-radius: 12px;
+  border: 2px solid var(--border); background: var(--surface-alt);
+  font-size: 1.4rem; text-align: center; cursor: pointer; transition: all .15s;
+}
+.mood-btn-sel:hover, .mood-btn-sel.active { border-color: var(--mint); background: var(--mint-light); }
+
+/* ── Modal ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.4); backdrop-filter: blur(2px);
+  z-index: 1000; align-items: center; justify-content: center; padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--surface); border-radius: 20px;
+  padding: 28px; width: 100%; max-width: 560px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+}
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+.modal-title { font-size: 1.1rem; font-weight: 800; }
+.modal-close { font-size: 1.3rem; color: var(--text-3); cursor: pointer; }
+.modal-close:hover { color: var(--text); }
+.form-group-inline { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tech-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.tech-toggle {
+  padding: 6px 12px; border-radius: 20px;
+  border: 1.5px solid var(--border); background: var(--surface-alt);
+  font-size: .8rem; font-weight: 600; color: var(--text-2); cursor: pointer; transition: all .15s;
+}
+.tech-toggle.on { border-color: var(--mint); background: var(--mint-light); color: var(--mint-dark); }
+textarea.form-input { min-height: 80px; resize: vertical; }
+
+/* ── Theme toggle ── */
+.theme-toggle { position: fixed; top: 18px; right: 20px; z-index: 900; }
+#screen-login .theme-toggle { right: 20px; top: 20px; }
+.theme-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border);
+  box-shadow: var(--card-shadow); font-size: 1rem;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+
+/* ── Result card ── */
+.result-hero { text-align: center; padding: 30px 20px; }
+.result-emoji { font-size: 4rem; margin-bottom: 10px; }
+.result-score { font-size: 3.5rem; font-weight: 800; font-family: 'Inter', sans-serif; }
+.result-label { display: inline-block; padding: 6px 20px; border-radius: 30px; font-size: 1rem; font-weight: 700; margin: 10px 0; }
+.result-note { font-size: .92rem; color: var(--text-2); max-width: 380px; margin: 0 auto; line-height: 1.6; }
+
+/* ── Dividers ── */
+.divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+@media (max-width: 800px) {
+  .sidebar { display: none; }
+  .grid-4 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr; }
+  .page { padding: 16px; }
+  .chat-sidebar { width: 220px; }
+}
+@media (max-width: 560px) {
+  .grid-4 { grid-template-columns: 1fr 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .chat-layout { flex-direction: column; }
+  .chat-sidebar { width: 100%; max-height: 200px; }
+}
+</style>
+
+<!-- THEME TOGGLE (global) -->
+<button class="theme-btn" onclick="toggleTheme()" id="themeBtn" title="เปลี่ยนธีม">🌙</button>
+
+<!-- ══════════ LOGIN SCREEN ══════════ -->
+<div id="screen-login" class="screen active">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="icon">🌿</div>
+      <h1>จิตใจดี</h1>
+      <p>ดูแลสุขภาพจิตด้วยใจ · Counseling Platform</p>
+    </div>
+
+    <div class="role-switch">
+      <button class="role-btn active" id="roleBtn-counselor" onclick="selectRole('counselor')">👨‍⚕️ นักจิตวิทยา</button>
+      <button class="role-btn" id="roleBtn-client" onclick="selectRole('client')">👤 ผู้รับบริการ</button>
+    </div>
+
+    <div class="form-group">
+      <label>อีเมล</label>
+      <input class="form-input" type="email" id="loginEmail" placeholder="example@email.com">
+    </div>
+    <div class="form-group">
+      <label>รหัสผ่าน</label>
+      <input class="form-input" type="password" id="loginPass" placeholder="••••••••">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
+
+    <div class="demo-section">
+      <p>บัญชีทดลองใช้</p>
+      <div class="demo-btns">
+        <button class="demo-btn" onclick="fillDemo('counselor')">👨‍⚕️ นักจิตวิทยา</button>
+        <button class="demo-btn" onclick="fillDemo('client')">👤 ผู้รับบริการ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ APP SHELL ══════════ -->
+<div id="screen-app" class="screen">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🌿</div>
+      <div>
+        <div class="brand-name">จิตใจดี</div>
+        <div class="brand-role" id="sidebarRole">นักจิตวิทยา</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section" id="nav-counselor">
+      <div class="sidebar-label">เมนูหลัก</div>
+      <div class="nav-item active" onclick="showPage('dashboard')"><span class="nav-icon">🏠</span> หน้าหลัก</div>
+      <div class="nav-item" onclick="showPage('sessions')"><span class="nav-icon">📋</span> บันทึก CO</div>
+      <div class="nav-item" onclick="showPage('clients')"><span class="nav-icon">👥</span> ผู้รับบริการ</div>
+      <div class="nav-item" onclick="showPage('chat-c')"><span class="nav-icon">💬</span> แชท <span class="nav-badge">2</span></div>
+      <div class="nav-item" onclick="showPage('profile-c')"><span class="nav-icon">👤</span> โปรไฟล์</div>
+    </div>
+
+    <div class="sidebar-section" id="nav-client" style="display:none">
+      <div class="sidebar-label">เมนูหลัก</div>
+      <div class="nav-item" onclick="showPage('client-home')"><span class="nav-icon">🏠</span> หน้าหลัก</div>
+      <div class="nav-item" onclick="showPage('assessments')"><span class="nav-icon">📊</span> แบบประเมิน</div>
+      <div class="nav-item" onclick="showPage('chat-cl')"><span class="nav-icon">💬</span> แชท</div>
+      <div class="nav-item" onclick="showPage('progress')"><span class="nav-icon">📈</span> ความคืบหน้า</div>
+      <div class="nav-item" onclick="showPage('profile-cl')"><span class="nav-icon">👤</span> โปรไฟล์</div>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="user-avatar" id="userAvatar">ส</div>
+      <div>
+        <div class="user-name" id="userName">ดร. สุภาพร</div>
+        <div class="user-email" id="userEmail">counselor@demo.com</div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()" title="ออกจากระบบ">⎋</button>
+    </div>
+  </aside>
+
+  <!-- Content -->
+  <main class="content-area">
+
+    <!-- ── Counselor Dashboard ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h2 id="greetingText">สวัสดีตอนเช้า, ดร. สุภาพร 👋</h2>
+        <p>นักจิตวิทยา / ผู้ให้คำปรึกษา · วันนี้ <span id="todayDate"></span></p>
+      </div>
+      <div class="grid-4" style="margin-bottom:24px">
+        <div class="stat-card accent-mint"><div class="stat-icon">👥</div><div class="stat-value">8</div><div class="stat-label">ผู้รับบริการทั้งหมด</div></div>
+        <div class="stat-card accent-sky"><div class="stat-icon">📋</div><div class="stat-value">14</div><div class="stat-label">เซสชันเดือนนี้</div></div>
+        <div class="stat-card accent-amber"><div class="stat-icon">⏰</div><div class="stat-value">3</div><div class="stat-label">ติดตามที่รอดำเนินการ</div></div>
+        <div class="stat-card accent-coral"><div class="stat-icon">⏱</div><div class="stat-value">52<span style="font-size:.9rem;font-weight:500">น.</span></div><div class="stat-label">เฉลี่ยต่อเซสชัน</div></div>
+      </div>
+      <div class="grid-2" style="margin-bottom:24px">
+        <div class="card">
+          <div class="section-title">บันทึกล่าสุด</div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="session-row" style="display:flex;align-items:center;gap:12px">
+              <div class="user-avatar" style="background:var(--mint)">ส</div>
+              <div style="flex:1">
+                <div style="font-weight:700;font-size:.9rem">สมชาย ใจดี</div>
+                <div style="font-size:.78rem;color:var(--text-3)">วันนี้ · 50 นาที</div>
+                <div style="margin-top:4px"><span class="chip">CBT</span><span class="chip">การฟังอย่างตั้งใจ</span></div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="showPage('sessions')">ดู</button>
+            </div>
+            <div class="session-row" style="display:flex;align-items:center;gap:12px">
+              <div class="user-avatar" style="background:var(--sky)">น</div>
+              <div style="flex:1">
+                <div style="font-weight:700;font-size:.9rem">นิดา แสงทอง</div>
+                <div style="font-size:.78rem;color:var(--text-3)">เมื่อวาน · 60 นาที</div>
+                <div style="margin-top:4px"><span class="chip">การสะท้อน</span><span class="chip">การยืนยันความรู้สึก</span></div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="showPage('sessions')">ดู</button>
+            </div>
+            <div class="session-row" style="display:flex;align-items:center;gap:12px">
+              <div class="user-avatar" style="background:var(--amber)">ป</div>
+              <div style="flex:1">
+                <div style="font-weight:700;font-size:.9rem">ปรีชา มณีรัตน์</div>
+                <div style="font-size:.78rem;color:var(--text-3)">2 วันก่อน · 45 นาที</div>
+                <div style="margin-top:4px"><span class="chip">Mindfulness</span><span class="chip">CBT</span></div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="showPage('sessions')">ดู</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-title">สถานะผู้รับบริการ</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:.85rem;font-weight:600">สมชาย ใจดี</span><span class="badge badge-green">ดีขึ้น</span></div>
+              <div style="font-size:.75rem;color:var(--text-3);margin-bottom:5px">PHQ-9: 8/27 · น้อย</div>
+              <div class="progress-bar"><div class="progress-fill" style="width:30%;background:var(--green-ok)"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:.85rem;font-weight:600">นิดา แสงทอง</span><span class="badge badge-amber">ติดตาม</span></div>
+              <div style="font-size:.75rem;color:var(--text-3);margin-bottom:5px">PHQ-9: 12/27 · ปานกลาง</div>
+              <div class="progress-bar"><div class="progress-fill" style="width:44%;background:var(--amber)"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:.85rem;font-weight:600">วิมล รัตนสิงห์</span><span class="badge badge-coral">ดูแลใกล้ชิด</span></div>
+              <div style="font-size:.75rem;color:var(--text-3);margin-bottom:5px">PHQ-9: 15/27 · ค่อนข้างรุนแรง</div>
+              <div class="progress-bar"><div class="progress-fill" style="width:56%;background:var(--coral)"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:.85rem;font-weight:600">ปรีชา มณีรัตน์</span><span class="badge badge-mint">ดีมาก</span></div>
+              <div style="font-size:.75rem;color:var(--text-3);margin-bottom:5px">PHQ-9: 4/27 · น้อยมาก</div>
+              <div class="progress-bar"><div class="progress-fill" style="width:15%;background:var(--mint)"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div class="section-title" style="margin:0">การดำเนินการด่วน</div>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-mint" onclick="openNewSession()">✏️ บันทึก CO ใหม่</button>
+          <button class="btn btn-outline" onclick="showPage('clients')">👥 ดูผู้รับบริการ</button>
+          <button class="btn btn-outline" onclick="showPage('chat-c')">💬 ดูข้อความ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CO Sessions ── -->
+    <div class="page" id="page-sessions">
+      <div class="page-header-row">
+        <h2>📋 บันทึก CO</h2>
+        <button class="btn btn-mint" onclick="openNewSession()">+ บันทึกใหม่</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table id="sessionsTable">
+            <thead><tr><th>ผู้รับบริการ</th><th>วันที่</th><th>เวลา</th><th>ปัญหา</th><th>เทคนิค</th><th>แผนติดตาม</th><th></th></tr></thead>
+            <tbody id="sessionsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Clients ── -->
+    <div class="page" id="page-clients">
+      <div class="page-header"><h2>👥 ผู้รับบริการ</h2><p>8 คน ในระบบ</p></div>
+      <div class="grid-2">
+        <div class="card" onclick="showClientDetail('สมชาย ใจดี','ส','var(--mint)',8,'น้อย',6,'น้อย','ดีขึ้นอย่างต่อเนื่อง ฝึก CBT ได้ดี')" style="cursor:pointer">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+            <div class="user-avatar" style="width:48px;height:48px;font-size:1.1rem;background:var(--mint)">ส</div>
+            <div style="flex:1"><div style="font-weight:700">สมชาย ใจดี</div><div style="font-size:.78rem;color:var(--text-3)">somchai@example.com · 5 ครั้ง</div></div>
+            <span class="badge badge-green">ดีขึ้น</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:var(--surface-alt);border-radius:8px;padding:10px;text-align:center"><div style="font-size:.72rem;color:var(--text-3)">PHQ-9</div><div style="font-size:1.1rem;font-weight:800;color:var(--green-ok)">8</div><div style="font-size:.72rem;color:var(--text-3)">น้อย</div></div>
+            <div style="background:var(--surface-alt);border-radius:8px;padding:10px;text-align:center"><div style="font-size:.72rem;color:var(--text-3)">GAD-7</div><div style="font-size:1.1rem;font-weight:800;color:var(--green-ok)">6</div><div style="font-size:.72rem;color:var(--text-3)">น้อย</div></div>
+          </div>
+        </div>
+        <div class="card" onclick="showClientDetail('นิดา แสงทอง','น','var(--sky)',3,'ปานกลาง',10,'ปานกลาง','กำลังทำงานเรื่องความสัมพันธ์ครอบครัว')" style="cursor:pointer">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+            <div class="user-avatar" style="width:48px;height:48px;font-size:1.1rem;background:var(--sky)">น</div>
+            <div style="flex:1"><div style="font-weight:700">นิดา แสงทอง</div><div style="font-size:.78rem;color:var(--text-3)">nida@example.com · 3 ครั้ง</div></div>
+            <span class="badge badge-amber">ติดตาม</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:var(--surface-alt);border-radius:8px;padding:10px;text-align:center"><div style="font-size:.72rem;color:var(--text-3)">PHQ-9</div><div style="font-size:1.1rem;font-weight:800;color:var(--amber)">12</div><div style="font-size:.72rem;color:var(--text-3)">ปานกลาง</div></div>
+            <div style="background:var(--surface-alt);border-radius:8px;padding:10px;text-align:center"><div style="font-size:.72rem;color:var(--text-3)">GAD-7</div><div style="font-size:1.1rem;font-weight:800;color:var(--amber)">10</div><div style="font-size:.72rem;color:var(--text-3)">ปานกลาง</div></div>
+          </div>
+        </div>
+        <div class="card" onclick="showClientDetail('ปรีชา มณีรัตน์','ป','var(--amber)',7,'น้อยมาก',3,'น้อยมาก','คืบหน้าดีมาก เกือบจบกระบวนการ')" style="cursor:pointer">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+            <div class="user-avatar" style="width:48px;height:48px;font-size:1.1rem;background:var(--amber)">ป</div>
+            <div style="flex:1"><div style="font-weight:700">ปรีชา มณีรัตน์</div><div style="font-size:.78rem;color:var(--text-3)">preecha@example.com · 7 ครั้ง</div></div>
+            <span class="badge badge-mint">ดีมาก</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:var(--surface-alt);border-radius:8px;padding:10px;text-align:center"><div style="font-size:.72rem;color:var(--text-3)">PHQ-9</div><div style="font-size:1.1rem;font-weight:800;color:var(--green-ok)">4</div><div style="font-size:.72rem;color:var(--text-3)">น้อยมาก</div></div>
+            <div style="background:var(--surface-alt);border-radius:8px;padding:10px;text-align:center"><div style="font-size:.72rem;color:var(--text-3)">GAD-7</div><div style="font-size:1.1rem;font-weight:800;color:var(--green-ok)">3</div><div style="font-size:.72rem;color:var(--text-3)">น้อยมาก</div></div>
+          </div>
+        </div>
+        <div class="card" onclick="showClientDetail('วิมล รัตนสิงห์','ว','var(--coral)',2,'ค่อนข้างรุนแรง',12,'ปานกลาง','ต้องการการดูแลใกล้ชิดมากขึ้น')" style="cursor:pointer">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+            <div class="user-avatar" style="width:48px;height:48px;font-size:1.1rem;background:var(--coral)">ว</div>
+            <div style="flex:1"><div style="font-weight:700">วิมล รัตนสิงห์</div><div style="font-size:.78rem;color:var(--text-3)">wimon@example.com · 2 ครั้ง</div></div>
+            <span class="badge badge-coral">ดูแลใกล้ชิด</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:var(--surface-alt);border-radius:8px;padding:10px;text-align:center"><div style="font-size:.72rem;color:var(--text-3)">PHQ-9</div><div style="font-size:1.1rem;font-weight:800;color:var(--coral)">15</div><div style="font-size:.72rem;color:var(--text-3)">ค่อนข้างรุนแรง</div></div>
+            <div style="background:var(--surface-alt);border-radius:8px;padding:10px;text-align:center"><div style="font-size:.72rem;color:var(--text-3)">GAD-7</div><div style="font-size:1.1rem;font-weight:800;color:var(--amber)">12</div><div style="font-size:.72rem;color:var(--text-3)">ปานกลาง</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Counselor Chat ── -->
+    <div class="page" id="page-chat-c">
+      <div class="page-header-row"><h2>💬 แชท</h2></div>
+      <div class="chat-layout">
+        <div class="chat-sidebar">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:.8rem;font-weight:700;color:var(--text-3)">ห้องแชท</div>
+          <div class="chat-room-item active" onclick="selectRoom(this,'สมชาย ใจดี','ส','var(--mint)')">
+            <div class="chat-room-avatar" style="background:var(--mint)">ส</div>
+            <div style="flex:1;min-width:0">
+              <div class="chat-room-name">สมชาย ใจดี</div>
+              <div class="chat-room-last">ขอบคุณครับ จะลองทำดู</div>
+            </div>
+            <div style="text-align:right"><div style="font-size:.7rem;color:var(--text-3)">10:30</div><div class="nav-badge" style="margin:4px 0 0">2</div></div>
+          </div>
+          <div class="chat-room-item" onclick="selectRoom(this,'นิดา แสงทอง','น','var(--sky)')">
+            <div class="chat-room-avatar" style="background:var(--sky)">น</div>
+            <div style="flex:1;min-width:0">
+              <div class="chat-room-name">นิดา แสงทอง</div>
+              <div class="chat-room-last">หนูจะลองคุยกับแม่นะคะ</div>
+            </div>
+            <div style="font-size:.7rem;color:var(--text-3)">09:15</div>
+          </div>
+          <div class="chat-room-item" onclick="selectRoom(this,'ปรีชา มณีรัตน์','ป','var(--amber)')">
+            <div class="chat-room-avatar" style="background:var(--amber)">ป</div>
+            <div style="flex:1;min-width:0">
+              <div class="chat-room-name">ปรีชา มณีรัตน์</div>
+              <div class="chat-room-last">นอนหลับดีขึ้นแล้วครับ</div>
+            </div>
+            <div style="text-align:right"><div style="font-size:.7rem;color:var(--text-3)">เมื่อวาน</div><div class="nav-badge" style="margin:4px 0 0">1</div></div>
+          </div>
+        </div>
+        <div class="chat-main">
+          <div class="chat-header">
+            <div class="user-avatar" id="chatAvatar" style="background:var(--mint)">ส</div>
+            <div><div style="font-weight:700" id="chatName">สมชาย ใจดี</div><div style="font-size:.75rem;color:var(--green-ok)">🟢 ออนไลน์</div></div>
+          </div>
+          <div class="chat-messages" id="chatMessages">
+            <div class="msg other"><div class="msg-bubble">สวัสดีครับ อยากขอคำแนะนำเรื่องงาน</div><div class="msg-time">09:00</div></div>
+            <div class="msg mine"><div class="msg-bubble">สวัสดีครับ คุณสมชาย มีอะไรอยากปรึกษาไหมครับ?</div><div class="msg-time">09:05</div></div>
+            <div class="msg other"><div class="msg-bubble">ผมรู้สึกเครียดมากเลยครับ งานเยอะมาก ไม่รู้จะเริ่มต้นยังไง</div><div class="msg-time">09:08</div></div>
+            <div class="msg mine"><div class="msg-bubble">เข้าใจความรู้สึกของคุณเลยครับ ลองบอกรายละเอียดเพิ่มเติมได้ไหมครับ ว่าเครียดเรื่องอะไรเป็นพิเศษ?</div><div class="msg-time">09:10</div></div>
+            <div class="msg other"><div class="msg-bubble">ขอบคุณครับ จะลองทำดู</div><div class="msg-time">10:30</div></div>
+          </div>
+          <div class="chat-input-bar">
+            <input class="chat-input" placeholder="พิมพ์ข้อความ..." id="chatInput" onkeydown="if(event.key==='Enter')sendMsg()">
+            <button class="chat-send-btn" onclick="sendMsg()">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Counselor Profile ── -->
+    <div class="page" id="page-profile-c">
+      <div class="page-header"><h2>👤 โปรไฟล์</h2></div>
+      <div class="grid-2">
+        <div class="card" style="text-align:center;padding:32px">
+          <div class="user-avatar" style="width:80px;height:80px;font-size:2rem;margin:0 auto 16px;background:var(--mint)">ส</div>
+          <div style="font-size:1.3rem;font-weight:800">ดร. สุภาพร มั่นคง</div>
+          <div style="color:var(--text-2);font-size:.88rem;margin-top:4px">counselor@demo.com</div>
+          <div class="badge badge-mint" style="margin-top:12px">🩺 นักจิตวิทยา</div>
+          <hr class="divider">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center">
+            <div><div style="font-size:1.2rem;font-weight:800">8</div><div style="font-size:.75rem;color:var(--text-3)">ผู้รับบริการ</div></div>
+            <div><div style="font-size:1.2rem;font-weight:800">42</div><div style="font-size:.75rem;color:var(--text-3)">เซสชันทั้งหมด</div></div>
+            <div><div style="font-size:1.2rem;font-weight:800">3</div><div style="font-size:.75rem;color:var(--text-3)">ปีประสบการณ์</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-title">ตั้งค่าบัญชี</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div class="nav-item" style="border-radius:8px"><span class="nav-icon">✏️</span> แก้ไขข้อมูลส่วนตัว</div>
+            <div class="nav-item" style="border-radius:8px"><span class="nav-icon">🔒</span> เปลี่ยนรหัสผ่าน</div>
+            <div class="nav-item" style="border-radius:8px"><span class="nav-icon">🔔</span> การแจ้งเตือน</div>
+            <div class="nav-item" style="border-radius:8px"><span class="nav-icon">🌐</span> ภาษา · ไทย</div>
+            <div class="nav-item" style="border-radius:8px"><span class="nav-icon">❓</span> ช่วยเหลือ</div>
+            <hr class="divider">
+            <button class="btn" style="background:#fdf0ee;color:var(--coral);width:100%;justify-content:center" onclick="doLogout()">⎋ ออกจากระบบ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Client Home ── -->
+    <div class="page" id="page-client-home">
+      <div class="page-header">
+        <h2 id="clientGreeting">สวัสดีตอนเช้า, สมชาย 👋</h2>
+        <p>วันนี้คุณรู้สึกอย่างไรบ้าง?</p>
+      </div>
+      <div class="grid-2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="section-title">บันทึกอารมณ์วันนี้</div>
+          <div class="mood-row" id="moodRow">
+            <button class="mood-btn-sel" onclick="selectMood(this,1)">😢<div style="font-size:.65rem;color:var(--text-3);margin-top:4px">แย่มาก</div></button>
+            <button class="mood-btn-sel" onclick="selectMood(this,2)">😞<div style="font-size:.65rem;color:var(--text-3);margin-top:4px">แย่</div></button>
+            <button class="mood-btn-sel" onclick="selectMood(this,3)">😐<div style="font-size:.65rem;color:var(--text-3);margin-top:4px">พอไปได้</div></button>
+            <button class="mood-btn-sel" onclick="selectMood(this,4)">🙂<div style="font-size:.65rem;color:var(--text-3);margin-top:4px">ดี</div></button>
+            <button class="mood-btn-sel" onclick="selectMood(this,5)">😊<div style="font-size:.65rem;color:var(--text-3);margin-top:4px">ดีมาก</div></button>
+          </div>
+        </div>
+        <div class="card" style="background:linear-gradient(135deg,var(--mint-light),var(--sky-light))">
+          <div class="section-title">นักจิตวิทยาของคุณ</div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="user-avatar" style="width:48px;height:48px;font-size:1.1rem;background:var(--mint)">ส</div>
+            <div style="flex:1"><div style="font-weight:700">ดร. สุภาพร มั่นคง</div><div style="font-size:.78rem;color:var(--text-3)">จิตวิทยาคลินิก · 5 ปีประสบการณ์</div><div style="font-size:.75rem;color:var(--green-ok);margin-top:2px">🟢 ออนไลน์</div></div>
+          </div>
+          <button class="btn btn-mint" style="width:100%;margin-top:14px;justify-content:center" onclick="showPage('chat-cl')">💬 แชทเลย</button>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="section-title">ผลการประเมินล่าสุด</div>
+          <div style="display:flex;gap:12px">
+            <div style="flex:1;background:var(--surface-alt);border-radius:10px;padding:14px;text-align:center">
+              <div style="font-size:.75rem;color:var(--text-3);font-weight:600">PHQ-9</div>
+              <div style="font-size:2rem;font-weight:800;color:var(--green-ok);font-family:'Inter',sans-serif">8</div>
+              <div class="progress-bar" style="margin:8px 0"><div class="progress-fill" style="width:30%;background:var(--green-ok)"></div></div>
+              <div style="font-size:.75rem;color:var(--green-ok);font-weight:700">น้อย</div>
+            </div>
+            <div style="flex:1;background:var(--surface-alt);border-radius:10px;padding:14px;text-align:center">
+              <div style="font-size:.75rem;color:var(--text-3);font-weight:600">GAD-7</div>
+              <div style="font-size:2rem;font-weight:800;color:var(--green-ok);font-family:'Inter',sans-serif">6</div>
+              <div class="progress-bar" style="margin:8px 0"><div class="progress-fill" style="width:29%;background:var(--green-ok)"></div></div>
+              <div style="font-size:.75rem;color:var(--green-ok);font-weight:700">น้อย</div>
+            </div>
+          </div>
+          <button class="btn btn-outline" style="width:100%;margin-top:12px;justify-content:center" onclick="showPage('assessments')">ทำแบบประเมินใหม่ →</button>
+        </div>
+        <div class="card">
+          <div class="section-title">เคล็ดลับสุขภาพจิต 💡</div>
+          <div style="font-size:.88rem;color:var(--text-2);line-height:1.7">การออกกำลังกาย 30 นาทีต่อวัน ช่วยลดความวิตกกังวลและเพิ่มความสุขได้อย่างมีนัยสำคัญ ลองเริ่มต้นด้วยการเดินเล่นก็ได้นะ 🚶</div>
+          <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+            <div style="font-size:.8rem;font-weight:700;color:var(--text-2);margin-bottom:8px">เมนูหลัก</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-outline btn-sm" onclick="showPage('assessments')">📊 ประเมิน</button>
+              <button class="btn btn-outline btn-sm" onclick="showPage('progress')">📈 คืบหน้า</button>
+              <button class="btn btn-outline btn-sm" onclick="showPage('chat-cl')">💬 แชท</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Assessments ── -->
+    <div class="page" id="page-assessments">
+      <div class="page-header"><h2>📊 แบบประเมิน</h2><p>ประเมินสุขภาพจิตของคุณ</p></div>
+      <div id="assessList">
+        <div class="grid-3" style="margin-bottom:24px">
+          <div class="card" style="text-align:center;padding:28px 20px">
+            <div style="font-size:2.5rem;margin-bottom:12px">😔</div>
+            <div style="font-weight:800;font-size:1rem;margin-bottom:4px">PHQ-9</div>
+            <div style="font-size:.82rem;color:var(--text-2);margin-bottom:4px">ประเมินภาวะซึมเศร้า</div>
+            <div style="font-size:.75rem;color:var(--text-3);margin-bottom:16px">9 ข้อ · คะแนนเต็ม 27</div>
+            <button class="btn btn-mint btn-sm" style="width:100%;justify-content:center" onclick="startAssessment('PHQ9')">เริ่มทำแบบประเมิน</button>
+          </div>
+          <div class="card" style="text-align:center;padding:28px 20px">
+            <div style="font-size:2.5rem;margin-bottom:12px">😰</div>
+            <div style="font-weight:800;font-size:1rem;margin-bottom:4px">GAD-7</div>
+            <div style="font-size:.82rem;color:var(--text-2);margin-bottom:4px">ประเมินความวิตกกังวล</div>
+            <div style="font-size:.75rem;color:var(--text-3);margin-bottom:16px">7 ข้อ · คะแนนเต็ม 21</div>
+            <button class="btn btn-sm" style="width:100%;justify-content:center;background:var(--sky);color:#fff" onclick="startAssessment('GAD7')">เริ่มทำแบบประเมิน</button>
+          </div>
+          <div class="card" style="text-align:center;padding:28px 20px">
+            <div style="font-size:2.5rem;margin-bottom:12px">🌟</div>
+            <div style="font-weight:800;font-size:1rem;margin-bottom:4px">SWLS</div>
+            <div style="font-size:.82rem;color:var(--text-2);margin-bottom:4px">ความพึงพอใจในชีวิต</div>
+            <div style="font-size:.75rem;color:var(--text-3);margin-bottom:16px">5 ข้อ · คะแนนเต็ม 35</div>
+            <button class="btn btn-sm" style="width:100%;justify-content:center;background:var(--amber);color:#fff" onclick="startAssessment('SWLS')">เริ่มทำแบบประเมิน</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-title">ประวัติการประเมิน</div>
+          <div class="table-wrap">
+            <table id="assessHistTable">
+              <thead><tr><th>แบบประเมิน</th><th>คะแนน</th><th>ระดับ</th><th>วันที่</th></tr></thead>
+              <tbody id="assessHistBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- Assessment flow -->
+      <div id="assessFlow" style="display:none;max-width:680px">
+        <div class="card" style="margin-bottom:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:.85rem;font-weight:700" id="assessTitle">PHQ-9</span>
+            <span style="font-size:.82rem;color:var(--text-3)" id="assessProgress">1 / 9</span>
+          </div>
+          <div class="progress-bar" style="margin-bottom:20px"><div class="progress-fill" id="assessBar" style="width:11%;background:var(--mint)"></div></div>
+          <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:20px;line-height:1.6" id="assessQText"></div>
+          <div id="assessOptions"></div>
+          <div style="display:flex;gap:10px;margin-top:20px">
+            <button class="btn btn-outline" id="assessPrev" onclick="assessPrev()">← ย้อนกลับ</button>
+            <button class="btn btn-mint" style="flex:2" id="assessNext" onclick="assessNext()">ถัดไป →</button>
+          </div>
+          <button class="btn btn-outline btn-sm" style="margin-top:10px;width:100%;justify-content:center;color:var(--text-3)" onclick="cancelAssessment()">ยกเลิก</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Client Chat ── -->
+    <div class="page" id="page-chat-cl">
+      <div class="page-header-row"><h2>💬 แชทกับนักจิตวิทยา</h2></div>
+      <div class="chat-layout" style="height:calc(100vh - 120px)">
+        <div class="chat-main">
+          <div class="chat-header">
+            <div class="user-avatar" style="background:var(--mint)">ส</div>
+            <div><div style="font-weight:700">ดร. สุภาพร มั่นคง</div><div style="font-size:.75rem;color:var(--green-ok)">🟢 ออนไลน์</div></div>
+          </div>
+          <div class="chat-messages" id="chatMessagesClient">
+            <div class="msg other"><div class="msg-bubble">สวัสดีค่ะ คุณสมชาย เป็นอย่างไรบ้างวันนี้คะ? 😊</div><div class="msg-time">เมื่อวาน 09:00</div></div>
+            <div class="msg other"><div class="msg-bubble">อย่าลืมทำแบบประเมินประจำสัปดาห์นะคะ ผลจะช่วยให้เราติดตามความคืบหน้าได้ดีขึ้น</div><div class="msg-time">เมื่อวาน 09:02</div></div>
+          </div>
+          <div class="chat-input-bar">
+            <input class="chat-input" placeholder="พิมพ์ข้อความ..." id="chatInputClient" onkeydown="if(event.key==='Enter')sendMsgClient()">
+            <button class="chat-send-btn" style="background:var(--sky)" onclick="sendMsgClient()">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Progress ── -->
+    <div class="page" id="page-progress">
+      <div class="page-header"><h2>📈 ความคืบหน้า</h2><p>ติดตามสุขภาพจิตของคุณ</p></div>
+      <div class="grid-3" style="margin-bottom:20px">
+        <div class="stat-card accent-mint"><div class="stat-icon">😊</div><div class="stat-value">3.7</div><div class="stat-label">อารมณ์เฉลี่ย 14 วัน</div></div>
+        <div class="stat-card accent-sky"><div class="stat-icon">📉</div><div class="stat-value" style="color:var(--green-ok)">−8</div><div class="stat-label">คะแนน PHQ-9 ลดลง</div></div>
+        <div class="stat-card accent-green" style="border-top:3px solid var(--green-ok)"><div class="stat-icon">✅</div><div class="stat-value">5</div><div class="stat-label">เซสชันที่ผ่านมา</div></div>
+      </div>
+      <div class="grid-2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="section-title">อารมณ์ 14 วันที่ผ่านมา</div>
+          <canvas id="moodCanvas" width="400" height="140"></canvas>
+        </div>
+        <div class="card">
+          <div class="section-title">แนวโน้ม PHQ-9</div>
+          <canvas id="phq9Canvas" width="400" height="140"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">แนวโน้ม GAD-7</div>
+        <canvas id="gad7Canvas" width="800" height="120"></canvas>
+        <div style="margin-top:14px;padding:14px;background:var(--mint-light);border-radius:10px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:1.5rem">✨</span>
+          <div style="font-size:.88rem;color:var(--mint-dark);line-height:1.5">คุณมีความคืบหน้าที่ดีมาก! คะแนนรวมดีขึ้น <strong>30%</strong> จากการเริ่มต้นใช้บริการ ยอดเยี่ยมมาก!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Client Profile ── -->
+    <div class="page" id="page-profile-cl">
+      <div class="page-header"><h2>👤 โปรไฟล์</h2></div>
+      <div class="grid-2">
+        <div class="card" style="text-align:center;padding:32px">
+          <div class="user-avatar" style="width:80px;height:80px;font-size:2rem;margin:0 auto 16px;background:var(--sky)">ส</div>
+          <div style="font-size:1.3rem;font-weight:800">สมชาย ใจดี</div>
+          <div style="color:var(--text-2);font-size:.88rem;margin-top:4px">client@demo.com</div>
+          <div class="badge badge-sky" style="margin-top:12px">💙 ผู้รับบริการ</div>
+          <hr class="divider">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center">
+            <div><div style="font-size:1.2rem;font-weight:800">5</div><div style="font-size:.75rem;color:var(--text-3)">เซสชัน</div></div>
+            <div><div style="font-size:1.2rem;font-weight:800">8</div><div style="font-size:.75rem;color:var(--text-3)">ประเมิน</div></div>
+            <div><div style="font-size:1.2rem;font-weight:800">14</div><div style="font-size:.75rem;color:var(--text-3)">วันที่ติดตาม</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-title">นักจิตวิทยาของฉัน</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+            <div class="user-avatar" style="background:var(--mint)">ส</div>
+            <div><div style="font-weight:700">ดร. สุภาพร มั่นคง</div><div style="font-size:.78rem;color:var(--text-3)">จิตวิทยาคลินิก</div></div>
+            <div class="nav-badge" style="margin-left:auto;background:var(--green-ok)">ออนไลน์</div>
+          </div>
+          <hr class="divider">
+          <div class="section-title">ตั้งค่า</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div class="nav-item" style="border-radius:8px"><span class="nav-icon">✏️</span> แก้ไขข้อมูลส่วนตัว</div>
+            <div class="nav-item" style="border-radius:8px"><span class="nav-icon">🔒</span> เปลี่ยนรหัสผ่าน</div>
+            <div class="nav-item" style="border-radius:8px"><span class="nav-icon">🛡️</span> ความเป็นส่วนตัว</div>
+            <div class="nav-item" style="border-radius:8px"><span class="nav-icon">🔔</span> การแจ้งเตือน</div>
+            <hr class="divider">
+            <button class="btn" style="background:#fdf0ee;color:var(--coral);width:100%;justify-content:center" onclick="doLogout()">⎋ ออกจากระบบ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ── Session Modal ── -->
+<div class="modal-overlay" id="sessionModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">✏️ บันทึก CO ใหม่</div>
+      <button class="modal-close" onclick="closeModal('sessionModal')">✕</button>
+    </div>
+    <div class="form-group-inline">
+      <div class="form-group"><label>ชื่อผู้รับบริการ *</label><input class="form-input" id="sClientName" placeholder="ชื่อ-นามสกุล"></div>
+      <div class="form-group"><label>วันที่</label><input class="form-input" type="date" id="sDate"></div>
+    </div>
+    <div class="form-group"><label>ระยะเวลา (นาที)</label><input class="form-input" type="number" id="sDuration" placeholder="60" value="60"></div>
+    <div class="form-group"><label>ปัญหาที่นำมาปรึกษา *</label><textarea class="form-input" id="sProblem" placeholder="อธิบายปัญหา..."></textarea></div>
+    <div class="form-group">
+      <label>เทคนิคที่ใช้</label>
+      <div class="tech-grid" id="techGrid"></div>
+    </div>
+    <div class="form-group"><label>บันทึกเพิ่มเติม</label><textarea class="form-input" id="sNotes" placeholder="สิ่งที่สังเกตได้ในเซสชัน..."></textarea></div>
+    <div class="form-group"><label>แผนติดตาม</label><textarea class="form-input" id="sFollowUp" placeholder="งานบ้าน การนัดหมายครั้งถัดไป..."></textarea></div>
+    <button class="btn btn-mint" style="width:100%;justify-content:center;margin-top:6px" onclick="saveSession()">💾 บันทึก</button>
+  </div>
+</div>
+
+<!-- ── Client Detail Modal ── -->
+<div class="modal-overlay" id="clientModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="clientModalName">สมชาย ใจดี</div>
+      <button class="modal-close" onclick="closeModal('clientModal')">✕</button>
+    </div>
+    <div id="clientModalBody"></div>
+  </div>
+</div>
+
+<!-- ── Assessment Result Modal ── -->
+<div class="modal-overlay" id="resultModal">
+  <div class="modal-box" style="text-align:center">
+    <div class="modal-header" style="justify-content:flex-end"><button class="modal-close" onclick="closeModal('resultModal');cancelAssessment()">✕</button></div>
+    <div id="resultBody"></div>
+    <button class="btn btn-mint" style="width:100%;justify-content:center;margin-top:20px" onclick="closeModal('resultModal');cancelAssessment()">เสร็จสิ้น</button>
+  </div>
+</div>
+
+<script>
+/* ══════════ STATE ══════════ */
+let currentRole = 'counselor';
+let currentPage = 'dashboard';
+let isDark = false;
+
+const TECHNIQUES = ['การฟังอย่างตั้งใจ','การสะท้อน','การปรับมุมมอง','CBT','Mindfulness','การสัมภาษณ์เพื่อสร้างแรงจูงใจ','มุ่งเน้นทางออก','การแสดงความเข้าใจ','การยืนยันความรู้สึก','ให้ความรู้ทางจิตวิทยา'];
+let selectedTechs = [];
+
+let sessions = [
+  {id:1,client:'สมชาย ใจดี',date:'2026-08-30',duration:50,problem:'ความเครียดจากการทำงาน',techniques:['การฟังอย่างตั้งใจ','CBT'],notes:'ฝึก thought record',followUp:'นัดสัปดาห์หน้า'},
+  {id:2,client:'นิดา แสงทอง',date:'2026-08-29',duration:60,problem:'ความสัมพันธ์ในครอบครัว',techniques:['การสะท้อน','การยืนยันความรู้สึก'],notes:'ช่วยปรับมุมมอง',followUp:'คุยกับแม่ด้วย I-message'},
+  {id:3,client:'ปรีชา มณีรัตน์',date:'2026-08-28',duration:45,problem:'ความวิตกกังวล นอนไม่หลับ',techniques:['Mindfulness','CBT'],notes:'สอนหายใจ 4-7-8',followUp:'บันทึก sleep diary'},
+];
+
+let assessHistory = [
+  {type:'PHQ-9',score:16,max:27,severity:'ค่อนข้างรุนแรง',date:'01/07/2026'},
+  {type:'GAD-7',score:13,max:21,severity:'ปานกลาง',date:'01/07/2026'},
+  {type:'PHQ-9',score:12,max:27,severity:'ปานกลาง',date:'15/07/2026'},
+  {type:'PHQ-9',score:8,max:27,severity:'น้อย',date:'30/08/2026'},
+  {type:'GAD-7',score:6,max:21,severity:'น้อย',date:'30/08/2026'},
+];
+
+/* Assessment data */
+const ASSESSMENTS = {
+  PHQ9: {
+    title:'PHQ-9 ประเมินภาวะซึมเศร้า', max:27,
+    questions:[
+      'ขาดความสนใจหรือความเพลิดเพลินในการทำสิ่งต่างๆ',
+      'รู้สึกหดหู่ เศร้า หรือสิ้นหวัง',
+      'มีปัญหาเรื่องการนอนหลับ หรือนอนหลับมากเกินไป',
+      'รู้สึกเหนื่อยล้าหรือมีพลังงานน้อย',
+      'เบื่ออาหารหรือกินมากเกินไป',
+      'รู้สึกแย่กับตัวเอง หรือรู้สึกว่าตัวเองล้มเหลว',
+      'มีปัญหาในการมีสมาธิกับสิ่งต่างๆ',
+      'เคลื่อนไหวหรือพูดช้าจนคนอื่นสังเกตได้',
+      'มีความคิดอยากทำร้ายตัวเองหรืออยากตาย',
+    ],
+    options:['ไม่มีเลย','มีบางวัน','มีกว่าครึ่ง','เกือบทุกวัน'],
+    score(a){const s=a.reduce((x,y)=>x+y,0);if(s<=4)return{s,sev:'น้อยมาก',note:'ผลการประเมินอยู่ในระดับปกติ ดูแลสุขภาพจิตต่อไป',col:'var(--green-ok)',emoji:'😊'};if(s<=9)return{s,sev:'น้อย',note:'มีอาการเล็กน้อย แนะนำให้ดูแลตนเอง',col:'#7DC080',emoji:'🙂'};if(s<=14)return{s,sev:'ปานกลาง',note:'แนะนำให้ปรึกษาผู้เชี่ยวชาญด้านสุขภาพจิต',col:'var(--amber)',emoji:'😐'};if(s<=19)return{s,sev:'ค่อนข้างรุนแรง',note:'ควรพบนักจิตวิทยาหรือจิตแพทย์โดยเร็ว',col:'#E07B6A',emoji:'😟'};return{s,sev:'รุนแรง',note:'ควรพบจิตแพทย์ทันที',col:'#C0392B',emoji:'😢'};}
+  },
+  GAD7: {
+    title:'GAD-7 ประเมินความวิตกกังวล', max:21,
+    questions:[
+      'รู้สึกประหม่า กังวล หรือหวาดผวา',
+      'ไม่สามารถหยุดหรือควบคุมความกังวลได้',
+      'กังวลมากเกินไปเกี่ยวกับสิ่งต่างๆ',
+      'มีความยากลำบากในการผ่อนคลาย',
+      'กระสับกระส่ายจนยากที่จะนิ่ง',
+      'หงุดหงิดหรือรำคาญง่าย',
+      'รู้สึกกลัวว่าจะมีสิ่งเลวร้ายเกิดขึ้น',
+    ],
+    options:['ไม่มีเลย','มีบางวัน','มีกว่าครึ่ง','เกือบทุกวัน'],
+    score(a){const s=a.reduce((x,y)=>x+y,0);if(s<=4)return{s,sev:'น้อยมาก',note:'ระดับความวิตกกังวลอยู่ในเกณฑ์ปกติ',col:'var(--green-ok)',emoji:'😌'};if(s<=9)return{s,sev:'น้อย',note:'มีความวิตกกังวลเล็กน้อย ลองเทคนิคผ่อนคลาย',col:'#7DC080',emoji:'🙂'};if(s<=14)return{s,sev:'ปานกลาง',note:'ควรปรึกษาผู้เชี่ยวชาญ',col:'var(--amber)',emoji:'😐'};return{s,sev:'รุนแรง',note:'ควรพบจิตแพทย์เพื่อการรักษา',col:'var(--coral)',emoji:'😟'};}
+  },
+  SWLS: {
+    title:'SWLS ความพึงพอใจในชีวิต', max:35,
+    questions:[
+      'ชีวิตของฉันใกล้เคียงกับอุดมคติในหลายๆ ด้าน',
+      'สภาพชีวิตของฉันดีเยี่ยม',
+      'ฉันพึงพอใจกับชีวิตของฉัน',
+      'จนถึงตอนนี้ ฉันได้รับสิ่งสำคัญที่ต้องการในชีวิต',
+      'ถ้าฉันมีชีวิตอีกครั้ง ฉันจะไม่เปลี่ยนแปลงอะไรเลย',
+    ],
+    options:['ไม่เห็นด้วยอย่างยิ่ง','ไม่เห็นด้วย','ค่อนข้างไม่เห็นด้วย','ไม่แน่ใจ','ค่อนข้างเห็นด้วย','เห็นด้วย','เห็นด้วยอย่างยิ่ง'],
+    score(a){const s=a.reduce((x,y)=>x+(y+1),0);if(s<=9)return{s,sev:'ต่ำมาก',note:'ไม่พึงพอใจในชีวิตอย่างมาก ควรขอความช่วยเหลือ',col:'var(--coral)',emoji:'😢'};if(s<=14)return{s,sev:'ต่ำ',note:'ไม่พึงพอใจในชีวิต',col:'var(--amber)',emoji:'😞'};if(s<=19)return{s,sev:'ปานกลาง-ต่ำ',note:'ค่อนข้างไม่พึงพอใจในชีวิต',col:'var(--amber)',emoji:'😐'};if(s<=24)return{s,sev:'ปานกลาง',note:'พึงพอใจในชีวิตระดับปานกลาง',col:'#7DC080',emoji:'🙂'};if(s<=29)return{s,sev:'สูง',note:'พึงพอใจในชีวิตระดับสูง',col:'var(--green-ok)',emoji:'😊'};return{s,sev:'สูงมาก',note:'พึงพอใจในชีวิตอย่างมาก ยอดเยี่ยม!',col:'var(--mint)',emoji:'🌟'};}
+  }
+};
+
+let assessType = null;
+let assessAnswers = [];
+let assessCurrent = 0;
+
+/* ══════════ INIT ══════════ */
+window.addEventListener('load', () => {
+  const d = new Date();
+  document.getElementById('todayDate').textContent = d.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+  initTechGrid();
+  renderSessions();
+  renderAssessHistory();
+  document.getElementById('sDate').value = new Date().toISOString().split('T')[0];
+  drawCharts();
+});
+
+function initTechGrid() {
+  const grid = document.getElementById('techGrid');
+  grid.innerHTML = TECHNIQUES.map(t => `<button class="tech-toggle" onclick="toggleTech(this,'${t}')">${t}</button>`).join('');
+}
+
+/* ══════════ AUTH ══════════ */
+let selectedRole = 'counselor';
+function selectRole(r){
+  selectedRole=r;
+  document.getElementById('roleBtn-counselor').classList.toggle('active',r==='counselor');
+  document.getElementById('roleBtn-client').classList.toggle('active',r==='client');
+  if(r==='counselor'){document.getElementById('loginEmail').value='counselor@demo.com';}
+  else{document.getElementById('loginEmail').value='client@demo.com';}
+}
+function fillDemo(r){
+  selectRole(r);
+  document.getElementById('loginPass').value='demo1234';
+}
+function doLogin(){
+  const email=document.getElementById('loginEmail').value;
+  const pass=document.getElementById('loginPass').value;
+  if(!email||!pass){alert('กรุณากรอกอีเมลและรหัสผ่าน');return;}
+  currentRole = selectedRole;
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  setupApp();
+}
+function doLogout(){
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-login').classList.add('active');
+}
+function setupApp(){
+  const isC = currentRole==='counselor';
+  document.getElementById('nav-counselor').style.display = isC?'block':'none';
+  document.getElementById('nav-client').style.display = isC?'none':'block';
+  document.getElementById('sidebarRole').textContent = isC?'นักจิตวิทยา':'ผู้รับบริการ';
+  document.getElementById('userAvatar').textContent = isC?'ส':'ส';
+  document.getElementById('userAvatar').style.background = isC?'var(--mint)':'var(--sky)';
+  document.getElementById('userName').textContent = isC?'ดร. สุภาพร':'สมชาย ใจดี';
+  document.getElementById('userEmail').textContent = isC?'counselor@demo.com':'client@demo.com';
+  const h = new Date().getHours();
+  const g = h<12?'สวัสดีตอนเช้า':h<17?'สวัสดีตอนบ่าย':'สวัสดีตอนเย็น';
+  if(isC) document.getElementById('greetingText').textContent = g+', ดร. สุภาพร 👋';
+  else document.getElementById('clientGreeting').textContent = g+', สมชาย 👋';
+  showPage(isC?'dashboard':'client-home');
+  drawCharts();
+}
+
+/* ══════════ NAVIGATION ══════════ */
+function showPage(id){
+  currentPage = id;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const pg = document.getElementById('page-'+id);
+  if(pg) pg.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes(`'${id}'`)) n.classList.add('active');
+  });
+  document.querySelector('.content-area').scrollTop=0;
+  if(id==='progress') setTimeout(drawCharts,100);
+}
+
+/* ══════════ SESSIONS ══════════ */
+function renderSessions(){
+  const tbody = document.getElementById('sessionsTbody');
+  tbody.innerHTML = sessions.map(s=>`
+    <tr>
+      <td><strong>${s.client}</strong></td>
+      <td>${s.date}</td>
+      <td>${s.duration} น.</td>
+      <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.problem}</td>
+      <td>${s.techniques.map(t=>`<span class="chip">${t}</span>`).join('')}</td>
+      <td style="font-size:.82rem;color:var(--text-2)">${s.followUp||'-'}</td>
+      <td><button class="btn btn-outline btn-sm" style="color:var(--coral)" onclick="deleteSession(${s.id})">🗑</button></td>
+    </tr>
+  `).join('');
+}
+function openNewSession(){
+  document.getElementById('sClientName').value='';
+  document.getElementById('sProblem').value='';
+  document.getElementById('sNotes').value='';
+  document.getElementById('sFollowUp').value='';
+  document.getElementById('sDuration').value='60';
+  document.getElementById('sDate').value=new Date().toISOString().split('T')[0];
+  selectedTechs=[];
+  document.querySelectorAll('.tech-toggle').forEach(b=>b.classList.remove('on'));
+  openModal('sessionModal');
+}
+function toggleTech(btn,t){btn.classList.toggle('on');if(selectedTechs.includes(t))selectedTechs=selectedTechs.filter(x=>x!==t);else selectedTechs.push(t);}
+function saveSession(){
+  const cn=document.getElementById('sClientName').value.trim();
+  const pr=document.getElementById('sProblem').value.trim();
+  if(!cn||!pr){alert('กรุณากรอกชื่อผู้รับบริการและปัญหา');return;}
+  sessions.unshift({id:Date.now(),client:cn,date:document.getElementById('sDate').value,duration:parseInt(document.getElementById('sDuration').value)||60,problem:pr,techniques:[...selectedTechs],notes:document.getElementById('sNotes').value,followUp:document.getElementById('sFollowUp').value});
+  renderSessions();closeModal('sessionModal');showPage('sessions');
+}
+function deleteSession(id){if(confirm('ลบบันทึกนี้?')){sessions=sessions.filter(s=>s.id!==id);renderSessions();}}
+
+/* ══════════ CLIENTS ══════════ */
+function showClientDetail(name,initial,color,sessions,phq9sev,gad7score,gad7sev,note){
+  document.getElementById('clientModalName').textContent=name;
+  document.getElementById('clientModalBody').innerHTML=`
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+      <div class="user-avatar" style="width:56px;height:56px;font-size:1.4rem;background:${color}">${initial}</div>
+      <div><div style="font-weight:700;font-size:1rem">${name}</div><div style="font-size:.82rem;color:var(--text-2)">${sessions} เซสชัน</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+      <div style="background:var(--surface-alt);border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:.75rem;color:var(--text-3);margin-bottom:4px">PHQ-9</div>
+        <div style="font-size:1.6rem;font-weight:800">${sessions<=3?12:8}</div>
+        <div style="font-size:.8rem;color:var(--text-2)">${phq9sev}</div>
+      </div>
+      <div style="background:var(--surface-alt);border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:.75rem;color:var(--text-3);margin-bottom:4px">GAD-7</div>
+        <div style="font-size:1.6rem;font-weight:800">${gad7score}</div>
+        <div style="font-size:.8rem;color:var(--text-2)">${gad7sev}</div>
+      </div>
+    </div>
+    <div style="padding:14px;background:var(--mint-light);border-radius:10px;font-size:.88rem;color:var(--mint-dark)">${note}</div>
+    <button class="btn btn-mint" style="width:100%;justify-content:center;margin-top:16px" onclick="closeModal('clientModal');showPage('chat-c')">💬 แชทกับผู้รับบริการ</button>
+  `;
+  openModal('clientModal');
+}
+
+/* ══════════ CHAT ══════════ */
+function selectRoom(el, name, initial, color) {
+  document.querySelectorAll('.chat-room-item').forEach(r=>r.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('chatAvatar').textContent=initial;
+  document.getElementById('chatAvatar').style.background=color;
+  document.getElementById('chatName').textContent=name;
+  document.getElementById('chatMessages').innerHTML=`<div class="msg other"><div class="msg-bubble">สวัสดีครับ ${name}</div><div class="msg-time">09:00</div></div>`;
+}
+function sendMsg(){
+  const inp=document.getElementById('chatInput');
+  const txt=inp.value.trim();if(!txt)return;
+  addMsg('chatMessages','mine',txt);
+  inp.value='';
+  setTimeout(()=>addMsg('chatMessages','other','ขอบคุณครับ รับทราบแล้ว 👍'),1200);
+}
+function sendMsgClient(){
+  const inp=document.getElementById('chatInputClient');
+  const txt=inp.value.trim();if(!txt)return;
+  addMsg('chatMessagesClient','mine',txt);
+  inp.value='';
+  const replies=['เข้าใจค่ะ ขอบคุณที่แชร์ความรู้สึก 💙','มีอะไรอื่นอยากพูดถึงไหมคะ?','ดิฉันรับฟังอยู่นะคะ ไม่ต้องรีบ','ยอดเยี่ยมมากเลยค่ะ ทำต่อไปนะคะ! ✨'];
+  setTimeout(()=>addMsg('chatMessagesClient','other',replies[Math.floor(Math.random()*replies.length)]),1500);
+}
+function addMsg(containerId, type, text){
+  const now=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  const c=document.getElementById(containerId);
+  const div=document.createElement('div');div.className=`msg ${type}`;
+  div.innerHTML=`<div class="msg-bubble">${text}</div><div class="msg-time">${now}</div>`;
+  c.appendChild(div);c.scrollTop=c.scrollHeight;
+}
+
+/* ══════════ ASSESSMENT ══════════ */
+function renderAssessHistory(){
+  const tbody=document.getElementById('assessHistBody');
+  const colors={'น้อยมาก':'var(--green-ok)','น้อย':'#7DC080','ปานกลาง':'var(--amber)','ค่อนข้างรุนแรง':'var(--coral)','รุนแรง':'#C0392B'};
+  tbody.innerHTML=assessHistory.map(h=>`<tr><td>${h.type}</td><td style="font-family:'Inter',sans-serif;font-weight:700">${h.score}/${h.max}</td><td><span style="font-weight:700;color:${colors[h.severity]||'var(--text)'}">${h.severity}</span></td><td style="color:var(--text-3)">${h.date}</td></tr>`).join('');
+}
+function startAssessment(type){
+  assessType=type;
+  assessAnswers=new Array(ASSESSMENTS[type].questions.length).fill(-1);
+  assessCurrent=0;
+  document.getElementById('assessList').style.display='none';
+  document.getElementById('assessFlow').style.display='block';
+  renderAssessQ();
+}
+function renderAssessQ(){
+  const a=ASSESSMENTS[assessType];
+  const q=a.questions[assessCurrent];
+  document.getElementById('assessTitle').textContent=a.title;
+  document.getElementById('assessProgress').textContent=`${assessCurrent+1} / ${a.questions.length}`;
+  document.getElementById('assessBar').style.width=`${((assessCurrent+1)/a.questions.length)*100}%`;
+  document.getElementById('assessQText').textContent=q;
+  document.getElementById('assessOptions').innerHTML=a.options.map((opt,i)=>`
+    <div class="assess-option ${assessAnswers[assessCurrent]===i?'selected':''}" onclick="selectAssessAnswer(${i})">
+      <div class="assess-radio"></div>
+      <div class="assess-option-text">${opt}</div>
+    </div>
+  `).join('');
+  document.getElementById('assessPrev').disabled=assessCurrent===0;
+  document.getElementById('assessNext').textContent=assessCurrent===a.questions.length-1?'ส่งคำตอบ ✓':'ถัดไป →';
+}
+function selectAssessAnswer(i){assessAnswers[assessCurrent]=i;renderAssessQ();}
+function assessNext(){
+  if(assessAnswers[assessCurrent]===-1){alert('กรุณาเลือกคำตอบก่อน');return;}
+  if(assessCurrent<ASSESSMENTS[assessType].questions.length-1){assessCurrent++;renderAssessQ();}
+  else showAssessResult();
+}
+function assessPrev(){if(assessCurrent>0){assessCurrent--;renderAssessQ();}}
+function cancelAssessment(){document.getElementById('assessFlow').style.display='none';document.getElementById('assessList').style.display='block';}
+function showAssessResult(){
+  const a=ASSESSMENTS[assessType];
+  const r=a.score(assessAnswers);
+  assessHistory.unshift({type:assessType==='PHQ9'?'PHQ-9':assessType==='GAD7'?'GAD-7':'SWLS',score:r.s,max:a.max,severity:r.sev,date:new Date().toLocaleDateString('th-TH')});
+  renderAssessHistory();
+  document.getElementById('resultBody').innerHTML=`
+    <div class="result-hero">
+      <div class="result-emoji">${r.emoji}</div>
+      <div style="font-size:.9rem;color:var(--text-2);margin-bottom:6px">${a.title}</div>
+      <div class="result-score" style="color:${r.col}">${r.s}</div>
+      <div style="font-size:.9rem;color:var(--text-3)">/ ${a.max} คะแนน</div>
+      <div class="result-label" style="background:${r.col}22;color:${r.col};margin-top:12px">${r.sev}</div>
+      <p class="result-note" style="margin-top:12px">${r.note}</p>
+    </div>
+  `;
+  openModal('resultModal');
+}
+
+/* ══════════ MOOD ══════════ */
+function selectMood(btn, val){
+  document.querySelectorAll('.mood-btn-sel').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  setTimeout(()=>{btn.parentElement.insertAdjacentHTML('afterend','<div style="margin-top:12px;padding:10px;background:var(--mint-light);border-radius:8px;font-size:.88rem;color:var(--mint-dark);text-align:center">✅ บันทึกอารมณ์เรียบร้อย!</div>');},300);
+}
+
+/* ══════════ MODAL ══════════ */
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
+
+/* ══════════ CHARTS ══════════ */
+function drawCharts(){
+  drawMoodChart();
+  drawPHQ9Chart();
+  drawGAD7Chart();
+}
+
+function drawMoodChart(){
+  const c=document.getElementById('moodCanvas');if(!c)return;
+  c.width=c.parentElement.clientWidth-40||380;
+  const ctx=c.getContext('2d');
+  const w=c.width,h=c.height;
+  const moods=[3,3,4,2,3,4,4,5,4,3,4,5,4,4];
+  const moodColors=['','#E07B6A','#F0A070','#E6A94A','#7DC080','#3DAA7D'];
+  ctx.clearRect(0,0,w,h);
+  const padL=8,padR=8,padT=10,padB=28;
+  const bw=(w-padL-padR)/moods.length-3;
+  const ch=h-padT-padB;
+  moods.forEach((m,i)=>{
+    const bh=(m/5)*ch;
+    const x=padL+i*(bw+3);
+    const y=padT+ch-bh;
+    const col=moodColors[m]||'#ccc';
+    ctx.fillStyle=col+'33';
+    ctx.beginPath();ctx.roundRect(x,y,bw,bh,4);ctx.fill();
+    ctx.fillStyle=col;
+    ctx.beginPath();ctx.roundRect(x,y,bw,Math.min(bh,6),4);ctx.fill();
+    ctx.fillStyle='var(--text-3)';
+    ctx.font='9px Inter,sans-serif';ctx.textAlign='center';
+    const day=new Date(Date.now()-(13-i)*86400000).getDate();
+    ctx.fillText(day,x+bw/2,h-6);
+  });
+}
+
+function drawPHQ9Chart(){
+  const c=document.getElementById('phq9Canvas');if(!c)return;
+  c.width=c.parentElement.clientWidth-40||380;
+  const ctx=c.getContext('2d');
+  const w=c.width,h=c.height;
+  const data=[16,14,12,10,8];
+  const labels=['ก.ค.','15 ก.ค.','ส.ค.','15 ส.ค.','ปัจจุบัน'];
+  drawLineChart(ctx,w,h,data,27,'#3DAA7D',labels);
+}
+function drawGAD7Chart(){
+  const c=document.getElementById('gad7Canvas');if(!c)return;
+  c.width=c.parentElement.clientWidth-40||780;
+  const ctx=c.getContext('2d');
+  const w=c.width,h=c.height;
+  const data=[13,11,10,8,6];
+  const labels=['ก.ค.','15 ก.ค.','ส.ค.','15 ส.ค.','ปัจจุบัน'];
+  drawLineChart(ctx,w,h,data,21,'#6BAED6',labels);
+}
+
+function drawLineChart(ctx,w,h,data,max,col,labels){
+  ctx.clearRect(0,0,w,h);
+  const padL=32,padR=16,padT=14,padB=28;
+  const cw=w-padL-padR,ch=h-padT-padB;
+  // Grid
+  ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--border')||'#D4E9E1';
+  ctx.lineWidth=1;
+  [0,.25,.5,.75,1].forEach(f=>{
+    const y=padT+ch*f;
+    ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(padL+cw,y);ctx.stroke();
+  });
+  // Area fill
+  const pts=data.map((v,i)=>({x:padL+i*(cw/(data.length-1)),y:padT+ch-(v/max)*ch}));
+  ctx.beginPath();ctx.moveTo(pts[0].x,padT+ch);
+  pts.forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.lineTo(pts[pts.length-1].x,padT+ch);ctx.closePath();
+  ctx.fillStyle=col+'22';ctx.fill();
+  // Line
+  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+  pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
+  // Dots + labels
+  pts.forEach((p,i)=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);
+    ctx.fillStyle=col;ctx.fill();
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fill();
+    // Value
+    ctx.fillStyle=col;ctx.font='bold 10px Inter,sans-serif';ctx.textAlign='center';
+    ctx.fillText(data[i],p.x,p.y-8);
+    // X label
+    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--text-3')||'#8AADA4';
+    ctx.font='9px Inter,sans-serif';
+    ctx.fillText(labels[i],p.x,padT+ch+16);
+  });
+  // Y axis
+  ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--text-3')||'#8AADA4';
+  ctx.font='9px Inter,sans-serif';ctx.textAlign='right';
+  [0,.5,1].forEach(f=>{ctx.fillText(Math.round(max*f),padL-4,padT+ch*(1-f)+4);});
+}
+
+/* ══════════ THEME ══════════ */
+function toggleTheme(){
+  isDark=!isDark;
+  document.documentElement.setAttribute('data-theme',isDark?'dark':'light');
+  document.getElementById('themeBtn').textContent=isDark?'☀️':'🌙';
+  setTimeout(drawCharts,50);
+}
+</script>
+</body></html>
