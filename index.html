@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>จิตใจดี</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
@@ -86,6 +86,15 @@ body {
   min-height: 100vh;
 }
 button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+/* ── ลบ 300ms tap delay บนมือถือ ── */
+* { touch-action: manipulation; }
+a, button, [onclick], .nav-item, .bnav-item, .demo-btn, .tech-toggle,
+.mood-btn-sel, .assess-opt, .chat-room-item, .card-client {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  cursor: pointer;
+}
 input, textarea { font-family: inherit; }
 a { color: inherit; text-decoration: none; }
 
