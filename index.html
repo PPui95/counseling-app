@@ -1162,6 +1162,27 @@ const db   = firebase.firestore();
 let currentUser = null;
 let chatUnsubscribe = null;
 
+// ── Auto-restore session on page refresh ──────────────────
+auth.onAuthStateChanged(async (firebaseUser) => {
+  if (firebaseUser && !currentUser) {
+    // User was logged in before refresh — restore session
+    try {
+      const snap = await db.collection('users').doc(firebaseUser.uid).get();
+      const profile = snap.data() || {};
+      currentUser = {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: profile.fullName || firebaseUser.displayName || firebaseUser.email,
+        role: profile.role || 'client'
+      };
+      currentRole = currentUser.role;
+      enterApp();
+    } catch(e) {
+      console.warn('onAuthStateChanged restore error:', e.message);
+    }
+  }
+});
+
 function showToast(msg, ok=true){
   let t=document.getElementById('gsToast');
   if(!t){t=document.createElement('div');t.id='gsToast';t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:20px;font-size:.85rem;font-weight:600;z-index:9999;transition:opacity .4s;white-space:nowrap';document.body.appendChild(t);}
@@ -1384,7 +1405,7 @@ async function loadAllData(){
 }
 function setupApp(){
   const isC = currentRole==='counselor';
-  const name = currentUser?.fullName || (isC?'ดร. สุภาพร':'สมชาย ใจดี');
+  const name = currentUser?.displayName || currentUser?.fullName || (isC?'ดร. สุภาพร':'สมชาย ใจดี');
   const email = currentUser?.email || (isC?'counselor@example.com':'client@example.com');
   document.getElementById('nav-counselor').style.display = isC?'block':'none';
   document.getElementById('nav-client').style.display = isC?'none':'block';
