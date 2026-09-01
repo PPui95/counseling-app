@@ -1517,13 +1517,13 @@ async function saveSession(){
   const s={id:'temp-'+Date.now(),client:cn,date:data.date,duration:data.duration,
     problem:pr,techniques:[...selectedTechs],notes:data.notes,followUp:data.followUpPlan};
   sessions.unshift(s); renderSessions(); closeModal('sessionModal'); showPage('sessions');
-  if(!currentUser?.uid.startsWith('demo-')){
+  if(currentUser?.uid && !currentUser.uid.startsWith('demo-')){
     try {
       const ref = await db.collection('sessions').add(data);
       s.id = ref.id;
       showToast('💾 บันทึกสำเร็จ!');
-    } catch(e){ showToast('⚠️ บันทึกเฉพาะในเครื่อง',false); }
-  } else { showToast('⚠️ โหมดทดลอง — ข้อมูลไม่บันทึกจริง',false); }
+    } catch(e){ showToast('❌ บันทึกไม่สำเร็จ: '+e.message, false); console.error('saveSession error:',e); }
+  } else { showToast('⚠️ โหมดทดลอง — ข้อมูลไม่บันทึกจริง (uid='+currentUser?.uid+')',false); }
 }
 async function deleteSession(id){
   if(!confirm('ลบบันทึกนี้?')) return;
@@ -1635,11 +1635,19 @@ async function showAssessResult(){
   assessHistory.unshift({type:assessType==='PHQ9'?'PHQ-9':assessType==='GAD7'?'GAD-7':'SWLS',score:r.s,max:a.max,severity:r.sev,date:new Date().toLocaleDateString('th-TH')});
   renderAssessHistory();
   if(currentUser?.uid && !currentUser.uid.startsWith('demo-')){
-    db.collection('assessments').add({
-      userId:currentUser.uid, type:assessType, answers:assessAnswers,
-      score:r.s, severity:r.sev, interpretation:r.note,
-      takenAt:firebase.firestore.FieldValue.serverTimestamp()
-    }).then(()=>showToast('📊 บันทึกผลประเมินสำเร็จ!')).catch(()=>{});
+    try {
+      await db.collection('assessments').add({
+        userId:currentUser.uid, type:assessType, answers:assessAnswers,
+        score:r.s, severity:r.sev, interpretation:r.note,
+        takenAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+      showToast('📊 บันทึกผลประเมินสำเร็จ!');
+    } catch(e){
+      showToast('❌ บันทึกไม่สำเร็จ: '+e.message, false);
+      console.error('saveAssessment error:', e);
+    }
+  } else {
+    showToast('⚠️ ยังไม่ได้ login จริง (uid='+currentUser?.uid+')', false);
   }
   renderAssessHistory();
   document.getElementById('resultBody').innerHTML=`
