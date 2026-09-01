@@ -1385,23 +1385,26 @@ async function loadAllData(){
   if(!currentUser || currentUser.uid.startsWith('demo-')) return;
   try {
     if(currentRole==='counselor'){
-      const snap = await db.collection('sessions').where('counselorId','==',currentUser.uid).orderBy('date','desc').get();
+      const snap = await db.collection('sessions').where('counselorId','==',currentUser.uid).get();
       sessions = snap.docs.map(d=>({ id:d.id, ...d.data(),
         client:d.data().clientName, problem:d.data().presentingProblem, followUp:d.data().followUpPlan,
         techniques:d.data().techniques||[]
       }));
+      sessions.sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
     } else {
       const [aSnap, mSnap] = await Promise.all([
-        db.collection('assessments').where('userId','==',currentUser.uid).orderBy('takenAt','desc').get(),
-        db.collection('moods').where('userId','==',currentUser.uid).orderBy('recordedAt','desc').limit(30).get()
+        db.collection('assessments').where('userId','==',currentUser.uid).get(),
+        db.collection('moods').where('userId','==',currentUser.uid).get()
       ]);
       assessHistory = aSnap.docs.map(d=>{ const data=d.data(); return {
         type:data.type==='PHQ9'?'PHQ-9':data.type==='GAD7'?'GAD-7':'SWLS',
         score:data.score, max:data.type==='PHQ9'?27:data.type==='GAD7'?21:35,
-        severity:data.severity, date:data.takenAt?.toDate().toLocaleDateString('th-TH')||'-'
+        severity:data.severity, date:data.takenAt?.toDate().toLocaleDateString('th-TH')||'-',
+        _ts: data.takenAt?.toMillis()||0
       };});
+      assessHistory.sort((a,b)=>b._ts - a._ts);
     }
-  } catch(e){ console.warn('loadAllData:',e.message); }
+  } catch(e){ console.error('loadAllData error:',e.message, e.code); showToast('⚠️ โหลดข้อมูลไม่สำเร็จ: '+e.message, false); }
 }
 function setupApp(){
   const isC = currentRole==='counselor';
