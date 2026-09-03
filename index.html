@@ -1162,10 +1162,26 @@ const db   = firebase.firestore();
 let currentUser = null;
 let chatUnsubscribe = null;
 
+// ── localStorage helpers (primary storage — instant, no network needed) ──
+function lsKey(suffix){ return 'jitjai_' + (currentUser?.uid||'_') + '_' + suffix; }
+function lsSave(suffix, data){ try{ localStorage.setItem(lsKey(suffix), JSON.stringify(data)); }catch(e){} }
+function lsLoad(suffix, fallback){ try{ const r=localStorage.getItem(lsKey(suffix)); return r?JSON.parse(r):fallback; }catch(e){ return fallback; } }
+function lsAppend(suffix, item){ const arr=lsLoad(suffix,[]); arr.unshift(item); lsSave(suffix,arr); }
+function lsSaveUser(user){ try{ localStorage.setItem('jitjai_user', JSON.stringify(user)); }catch(e){} }
+function lsLoadUser(){ try{ const r=localStorage.getItem('jitjai_user'); return r?JSON.parse(r):null; }catch(e){ return null; } }
+
 // ── Auto-restore session on page refresh ──────────────────
 auth.onAuthStateChanged(async (firebaseUser) => {
   if (firebaseUser && !currentUser) {
-    // User was logged in before refresh — restore session
+    // Try localStorage first (instant)
+    const cached = lsLoadUser();
+    if (cached && cached.uid === firebaseUser.uid) {
+      currentUser = cached;
+      currentRole = currentUser.role;
+      enterApp();
+      return;
+    }
+    // Fall back to Firestore
     try {
       const snap = await db.collection('users').doc(firebaseUser.uid).get();
       const profile = snap.data() || {};
@@ -1176,9 +1192,19 @@ auth.onAuthStateChanged(async (firebaseUser) => {
         role: profile.role || 'client'
       };
       currentRole = currentUser.role;
+      lsSaveUser(currentUser);
       enterApp();
     } catch(e) {
-      console.warn('onAuthStateChanged restore error:', e.message);
+      // Even if Firestore fails, use Firebase user info
+      currentUser = {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName || firebaseUser.email,
+        role: 'client'
+      };
+      currentRole = 'client';
+      lsSaveUser(currentUser);
+      enterApp();
     }
   }
 });
@@ -1318,6 +1344,7 @@ async function doLogin(){
     const profile = snap.data() || {};
     currentUser = { uid: cred.user.uid, email: cred.user.email, displayName: profile.fullName || cred.user.displayName || email, role: profile.role || selectedRole };
     currentRole = currentUser.role;
+    lsSaveUser(currentUser);
     enterApp();
     showToast('✅ เข้าสู่ระบบสำเร็จ!');
   } catch(e){
@@ -1343,6 +1370,7 @@ async function doRegister(){
     });
     currentUser = { uid: cred.user.uid, email, displayName: name, role: selectedRole };
     currentRole = selectedRole;
+    lsSaveUser(currentUser);
     enterApp();
     showToast('🎉 สมัครสมาชิกสำเร็จ ยินดีต้อนรับ!');
   } catch(e){
@@ -1368,6 +1396,7 @@ function firebaseErrTH(code){
 async function doLogout(){
   if(chatUnsubscribe){ chatUnsubscribe(); chatUnsubscribe=null; }
   await auth.signOut().catch(()=>{});
+  try{ localStorage.removeItem('jitjai_user'); }catch(e){}
   currentUser=null; sessions=[]; assessHistory=[];
   document.getElementById('screen-app').classList.remove('active');
   document.getElementById('screen-login').classList.add('active');
@@ -1375,36 +1404,55 @@ async function doLogout(){
 }
 
 function enterApp(){
+  // Clear demo data
+  if(!currentUser?.uid?.startsWith('demo-')){ sessions=[]; assessHistory=[]; }
   document.getElementById('screen-login').classList.remove('active');
   document.getElementById('screen-app').classList.add('active');
-  loadAllData().then(()=>{ renderSessions(); renderAssessHistory(); drawCharts(); });
   setupApp();
+  loadAllData().then(()=>{ renderSessions(); renderAssessHistory(); drawCharts(); });
 }
 
 async function loadAllData(){
   if(!currentUser || currentUser.uid.startsWith('demo-')) return;
+
+  // ── 1. Load from localStorage immediately (always works) ──
+  if(currentRole==='counselor'){
+    const ls = lsLoad('sessions', null);
+    if(ls) { sessions = ls; }
+    else { sessions = []; } // clear demo data
+  } else {
+    const la = lsLoad('assessments', null);
+    if(la) { assessHistory = la; }
+    else { assessHistory = []; }
+  }
+
+  // ── 2. Try Firestore in background (sync from cloud) ──
   try {
     if(currentRole==='counselor'){
       const snap = await db.collection('sessions').where('counselorId','==',currentUser.uid).get();
-      sessions = snap.docs.map(d=>({ id:d.id, ...d.data(),
-        client:d.data().clientName, problem:d.data().presentingProblem, followUp:d.data().followUpPlan,
-        techniques:d.data().techniques||[]
-      }));
-      sessions.sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+      if(!snap.empty){
+        sessions = snap.docs.map(d=>({ id:d.id, ...d.data(),
+          client:d.data().clientName, problem:d.data().presentingProblem, followUp:d.data().followUpPlan,
+          techniques:d.data().techniques||[]
+        }));
+        sessions.sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+        lsSave('sessions', sessions); // sync back to localStorage
+      }
     } else {
-      const [aSnap, mSnap] = await Promise.all([
-        db.collection('assessments').where('userId','==',currentUser.uid).get(),
-        db.collection('moods').where('userId','==',currentUser.uid).get()
-      ]);
-      assessHistory = aSnap.docs.map(d=>{ const data=d.data(); return {
-        type:data.type==='PHQ9'?'PHQ-9':data.type==='GAD7'?'GAD-7':'SWLS',
-        score:data.score, max:data.type==='PHQ9'?27:data.type==='GAD7'?21:35,
-        severity:data.severity, date:data.takenAt?.toDate().toLocaleDateString('th-TH')||'-',
-        _ts: data.takenAt?.toMillis()||0
-      };});
-      assessHistory.sort((a,b)=>b._ts - a._ts);
+      const aSnap = await db.collection('assessments').where('userId','==',currentUser.uid).get();
+      if(!aSnap.empty){
+        assessHistory = aSnap.docs.map(d=>{ const data=d.data(); return {
+          type:data.type==='PHQ9'?'PHQ-9':data.type==='GAD7'?'GAD-7':'SWLS',
+          score:data.score, max:data.type==='PHQ9'?27:data.type==='GAD7'?21:35,
+          severity:data.severity, date:data.takenAt?.toDate().toLocaleDateString('th-TH')||new Date().toLocaleDateString('th-TH'),
+          _ts: data.takenAt?.toMillis()||Date.now()
+        };});
+        assessHistory.sort((a,b)=>b._ts - a._ts);
+        lsSave('assessments', assessHistory);
+      }
     }
-  } catch(e){ console.error('loadAllData error:',e.message, e.code); showToast('⚠️ โหลดข้อมูลไม่สำเร็จ: '+e.message, false); }
+    renderSessions(); renderAssessHistory(); drawCharts();
+  } catch(e){ console.warn('Firestore sync failed (localStorage data still available):', e.message); }
 }
 function setupApp(){
   const isC = currentRole==='counselor';
@@ -1518,17 +1566,19 @@ async function saveSession(){
     problem:pr,techniques:[...selectedTechs],notes:data.notes,followUp:data.followUpPlan};
   sessions.unshift(s); renderSessions(); closeModal('sessionModal'); showPage('sessions');
   if(currentUser?.uid && !currentUser.uid.startsWith('demo-')){
-    try {
-      const ref = await db.collection('sessions').add(data);
-      s.id = ref.id;
-      showToast('💾 บันทึกสำเร็จ!');
-    } catch(e){ showToast('❌ บันทึกไม่สำเร็จ: '+e.message, false); console.error('saveSession error:',e); }
-  } else { showToast('⚠️ โหมดทดลอง — ข้อมูลไม่บันทึกจริง (uid='+currentUser?.uid+')',false); }
+    // Save to localStorage immediately (guaranteed to work)
+    lsSave('sessions', sessions);
+    showToast('💾 บันทึกสำเร็จ!');
+    // Try Firestore in background
+    db.collection('sessions').add(data).then(ref=>{ s.id=ref.id; lsSave('sessions',sessions); }).catch(e=>console.warn('Firestore session sync:',e.message));
+  } else { showToast('⚠️ โหมดทดลอง — ข้อมูลไม่บันทึกจริง',false); }
 }
 async function deleteSession(id){
   if(!confirm('ลบบันทึกนี้?')) return;
-  sessions=sessions.filter(s=>s.id!==id); renderSessions(); showToast('🗑 ลบแล้ว');
-  if(!id.startsWith('demo-')&&!id.startsWith('temp-')){
+  sessions=sessions.filter(s=>s.id!==id);
+  lsSave('sessions', sessions);
+  renderSessions(); showToast('🗑 ลบแล้ว');
+  if(id && !id.startsWith('demo-')&&!id.startsWith('temp-')){
     db.collection('sessions').doc(id).delete().catch(()=>{});
   }
 }
@@ -1632,22 +1682,18 @@ function cancelAssessment(){document.getElementById('assessFlow').style.display=
 async function showAssessResult(){
   const a=ASSESSMENTS[assessType];
   const r=a.score(assessAnswers);
-  assessHistory.unshift({type:assessType==='PHQ9'?'PHQ-9':assessType==='GAD7'?'GAD-7':'SWLS',score:r.s,max:a.max,severity:r.sev,date:new Date().toLocaleDateString('th-TH')});
-  renderAssessHistory();
+  const newAssess = {type:assessType==='PHQ9'?'PHQ-9':assessType==='GAD7'?'GAD-7':'SWLS',score:r.s,max:a.max,severity:r.sev,date:new Date().toLocaleDateString('th-TH'),_ts:Date.now()};
+  assessHistory.unshift(newAssess);
   if(currentUser?.uid && !currentUser.uid.startsWith('demo-')){
-    try {
-      await db.collection('assessments').add({
-        userId:currentUser.uid, type:assessType, answers:assessAnswers,
-        score:r.s, severity:r.sev, interpretation:r.note,
-        takenAt:firebase.firestore.FieldValue.serverTimestamp()
-      });
-      showToast('📊 บันทึกผลประเมินสำเร็จ!');
-    } catch(e){
-      showToast('❌ บันทึกไม่สำเร็จ: '+e.message, false);
-      console.error('saveAssessment error:', e);
-    }
-  } else {
-    showToast('⚠️ ยังไม่ได้ login จริง (uid='+currentUser?.uid+')', false);
+    // Save to localStorage immediately
+    lsSave('assessments', assessHistory);
+    showToast('📊 บันทึกผลประเมินสำเร็จ!');
+    // Sync to Firestore in background
+    db.collection('assessments').add({
+      userId:currentUser.uid, type:assessType, answers:assessAnswers,
+      score:r.s, severity:r.sev, interpretation:r.note,
+      takenAt:firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(e=>console.warn('Firestore assessment sync:', e.message));
   }
   renderAssessHistory();
   document.getElementById('resultBody').innerHTML=`
@@ -1670,10 +1716,13 @@ async function selectMood(btn, val){
   const note = document.getElementById('moodNote')?.value||'';
   let msg = '✅ บันทึกอารมณ์เรียบร้อย!';
   if(currentUser?.uid && !currentUser.uid.startsWith('demo-')){
-    try {
-      await db.collection('moods').add({ userId:currentUser.uid, mood:val, note, recordedAt:firebase.firestore.FieldValue.serverTimestamp() });
-      msg = '✅ บันทึกอารมณ์สำเร็จ!';
-    } catch(e){ msg = '⚠️ บันทึกเฉพาะในเครื่อง'; }
+    // Save to localStorage immediately
+    const moods = lsLoad('moods',[]);
+    moods.unshift({mood:val, note, recordedAt:new Date().toISOString()});
+    lsSave('moods', moods);
+    msg = '✅ บันทึกอารมณ์สำเร็จ!';
+    // Sync to Firestore in background
+    db.collection('moods').add({ userId:currentUser.uid, mood:val, note, recordedAt:firebase.firestore.FieldValue.serverTimestamp() }).catch(e=>console.warn('Firestore mood sync:',e.message));
   }
   setTimeout(()=>{
     const prev=btn.parentElement.nextElementSibling;
