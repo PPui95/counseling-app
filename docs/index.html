@@ -667,67 +667,22 @@ textarea.form-input { min-height: 80px; resize: vertical; }
         <p>นักจิตวิทยา / ผู้ให้คำปรึกษา · วันนี้ <span id="todayDate"></span></p>
       </div>
       <div class="grid-4" style="margin-bottom:24px">
-        <div class="stat-card accent-mint"><div class="stat-icon">👥</div><div class="stat-value">8</div><div class="stat-label">ผู้รับบริการทั้งหมด</div></div>
-        <div class="stat-card accent-sky"><div class="stat-icon">📋</div><div class="stat-value">14</div><div class="stat-label">เซสชันเดือนนี้</div></div>
-        <div class="stat-card accent-amber"><div class="stat-icon">⏰</div><div class="stat-value">3</div><div class="stat-label">ติดตามที่รอดำเนินการ</div></div>
-        <div class="stat-card accent-coral"><div class="stat-icon">⏱</div><div class="stat-value">52<span style="font-size:.9rem;font-weight:500">น.</span></div><div class="stat-label">เฉลี่ยต่อเซสชัน</div></div>
+        <div class="stat-card accent-mint"><div class="stat-icon">👥</div><div class="stat-value" id="dashClients">0</div><div class="stat-label">ผู้รับบริการทั้งหมด</div></div>
+        <div class="stat-card accent-sky"><div class="stat-icon">📋</div><div class="stat-value" id="dashSessions">0</div><div class="stat-label">เซสชันทั้งหมด</div></div>
+        <div class="stat-card accent-amber"><div class="stat-icon">⏰</div><div class="stat-value" id="dashFollowUp">0</div><div class="stat-label">ติดตามที่รอดำเนินการ</div></div>
+        <div class="stat-card accent-coral"><div class="stat-icon">⏱</div><div class="stat-value" id="dashAvgDur">-<span style="font-size:.9rem;font-weight:500">น.</span></div><div class="stat-label">เฉลี่ยต่อเซสชัน</div></div>
       </div>
       <div class="grid-2" style="margin-bottom:24px">
         <div class="card">
           <div class="section-title">บันทึกล่าสุด</div>
-          <div style="display:flex;flex-direction:column;gap:14px">
-            <div class="session-row" style="display:flex;align-items:center;gap:12px">
-              <div class="user-avatar" style="background:var(--mint)">ส</div>
-              <div style="flex:1">
-                <div style="font-weight:700;font-size:.9rem">สมชาย ใจดี</div>
-                <div style="font-size:.78rem;color:var(--text-3)">วันนี้ · 50 นาที</div>
-                <div style="margin-top:4px"><span class="chip">CBT</span><span class="chip">การฟังอย่างตั้งใจ</span></div>
-              </div>
-              <button class="btn btn-outline btn-sm" onclick="showPage('sessions')">ดู</button>
-            </div>
-            <div class="session-row" style="display:flex;align-items:center;gap:12px">
-              <div class="user-avatar" style="background:var(--sky)">น</div>
-              <div style="flex:1">
-                <div style="font-weight:700;font-size:.9rem">นิดา แสงทอง</div>
-                <div style="font-size:.78rem;color:var(--text-3)">เมื่อวาน · 60 นาที</div>
-                <div style="margin-top:4px"><span class="chip">การสะท้อน</span><span class="chip">การยืนยันความรู้สึก</span></div>
-              </div>
-              <button class="btn btn-outline btn-sm" onclick="showPage('sessions')">ดู</button>
-            </div>
-            <div class="session-row" style="display:flex;align-items:center;gap:12px">
-              <div class="user-avatar" style="background:var(--amber)">ป</div>
-              <div style="flex:1">
-                <div style="font-weight:700;font-size:.9rem">ปรีชา มณีรัตน์</div>
-                <div style="font-size:.78rem;color:var(--text-3)">2 วันก่อน · 45 นาที</div>
-                <div style="margin-top:4px"><span class="chip">Mindfulness</span><span class="chip">CBT</span></div>
-              </div>
-              <button class="btn btn-outline btn-sm" onclick="showPage('sessions')">ดู</button>
-            </div>
+          <div id="dashRecentSessions" style="display:flex;flex-direction:column;gap:14px">
+            <div style="text-align:center;color:var(--text-3);padding:20px;font-size:.88rem">ยังไม่มีบันทึก CO — เริ่มบันทึกเซสชันแรกได้เลย</div>
           </div>
         </div>
         <div class="card">
-          <div class="section-title">สถานะผู้รับบริการ</div>
-          <div style="display:flex;flex-direction:column;gap:12px">
-            <div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:.85rem;font-weight:600">สมชาย ใจดี</span><span class="badge badge-green">ดีขึ้น</span></div>
-              <div style="font-size:.75rem;color:var(--text-3);margin-bottom:5px">PHQ-9: 8/27 · น้อย</div>
-              <div class="progress-bar"><div class="progress-fill" style="width:30%;background:var(--green-ok)"></div></div>
-            </div>
-            <div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:.85rem;font-weight:600">นิดา แสงทอง</span><span class="badge badge-amber">ติดตาม</span></div>
-              <div style="font-size:.75rem;color:var(--text-3);margin-bottom:5px">PHQ-9: 12/27 · ปานกลาง</div>
-              <div class="progress-bar"><div class="progress-fill" style="width:44%;background:var(--amber)"></div></div>
-            </div>
-            <div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:.85rem;font-weight:600">วิมล รัตนสิงห์</span><span class="badge badge-coral">ดูแลใกล้ชิด</span></div>
-              <div style="font-size:.75rem;color:var(--text-3);margin-bottom:5px">PHQ-9: 15/27 · ค่อนข้างรุนแรง</div>
-              <div class="progress-bar"><div class="progress-fill" style="width:56%;background:var(--coral)"></div></div>
-            </div>
-            <div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:.85rem;font-weight:600">ปรีชา มณีรัตน์</span><span class="badge badge-mint">ดีมาก</span></div>
-              <div style="font-size:.75rem;color:var(--text-3);margin-bottom:5px">PHQ-9: 4/27 · น้อยมาก</div>
-              <div class="progress-bar"><div class="progress-fill" style="width:15%;background:var(--mint)"></div></div>
-            </div>
+          <div class="section-title">สรุปผู้รับบริการ</div>
+          <div id="dashClientStatus" style="display:flex;flex-direction:column;gap:12px">
+            <div style="text-align:center;color:var(--text-3);padding:20px;font-size:.88rem">ยังไม่มีข้อมูล</div>
           </div>
         </div>
       </div>
@@ -775,42 +730,17 @@ textarea.form-input { min-height: 80px; resize: vertical; }
       <div class="chat-layout">
         <div class="chat-sidebar">
           <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:.8rem;font-weight:700;color:var(--text-3)">ห้องแชท</div>
-          <div class="chat-room-item active" onclick="selectRoom(this,'สมชาย ใจดี','ส','var(--mint)')">
-            <div class="chat-room-avatar" style="background:var(--mint)">ส</div>
-            <div style="flex:1;min-width:0">
-              <div class="chat-room-name">สมชาย ใจดี</div>
-              <div class="chat-room-last">ขอบคุณครับ จะลองทำดู</div>
-            </div>
-            <div style="text-align:right"><div style="font-size:.7rem;color:var(--text-3)">10:30</div><div class="nav-badge" style="margin:4px 0 0">2</div></div>
-          </div>
-          <div class="chat-room-item" onclick="selectRoom(this,'นิดา แสงทอง','น','var(--sky)')">
-            <div class="chat-room-avatar" style="background:var(--sky)">น</div>
-            <div style="flex:1;min-width:0">
-              <div class="chat-room-name">นิดา แสงทอง</div>
-              <div class="chat-room-last">หนูจะลองคุยกับแม่นะคะ</div>
-            </div>
-            <div style="font-size:.7rem;color:var(--text-3)">09:15</div>
-          </div>
-          <div class="chat-room-item" onclick="selectRoom(this,'ปรีชา มณีรัตน์','ป','var(--amber)')">
-            <div class="chat-room-avatar" style="background:var(--amber)">ป</div>
-            <div style="flex:1;min-width:0">
-              <div class="chat-room-name">ปรีชา มณีรัตน์</div>
-              <div class="chat-room-last">นอนหลับดีขึ้นแล้วครับ</div>
-            </div>
-            <div style="text-align:right"><div style="font-size:.7rem;color:var(--text-3)">เมื่อวาน</div><div class="nav-badge" style="margin:4px 0 0">1</div></div>
+          <div id="chatRoomList">
+            <div style="padding:24px;text-align:center;color:var(--text-3);font-size:.85rem">เพิ่มบันทึก CO เพื่อสร้างห้องแชทกับผู้รับบริการ</div>
           </div>
         </div>
         <div class="chat-main">
           <div class="chat-header">
-            <div class="user-avatar" id="chatAvatar" style="background:var(--mint)">ส</div>
-            <div><div style="font-weight:700" id="chatName">สมชาย ใจดี</div><div style="font-size:.75rem;color:var(--green-ok)">🟢 ออนไลน์</div></div>
+            <div class="user-avatar" id="chatAvatar" style="background:var(--mint)">?</div>
+            <div><div style="font-weight:700" id="chatName">เลือกห้องแชท</div><div style="font-size:.75rem;color:var(--green-ok)">🟢 ออนไลน์</div></div>
           </div>
           <div class="chat-messages" id="chatMessages">
-            <div class="msg other"><div class="msg-bubble">สวัสดีครับ อยากขอคำแนะนำเรื่องงาน</div><div class="msg-time">09:00</div></div>
-            <div class="msg mine"><div class="msg-bubble">สวัสดีครับ คุณสมชาย มีอะไรอยากปรึกษาไหมครับ?</div><div class="msg-time">09:05</div></div>
-            <div class="msg other"><div class="msg-bubble">ผมรู้สึกเครียดมากเลยครับ งานเยอะมาก ไม่รู้จะเริ่มต้นยังไง</div><div class="msg-time">09:08</div></div>
-            <div class="msg mine"><div class="msg-bubble">เข้าใจความรู้สึกของคุณเลยครับ ลองบอกรายละเอียดเพิ่มเติมได้ไหมครับ ว่าเครียดเรื่องอะไรเป็นพิเศษ?</div><div class="msg-time">09:10</div></div>
-            <div class="msg other"><div class="msg-bubble">ขอบคุณครับ จะลองทำดู</div><div class="msg-time">10:30</div></div>
+            <div style="text-align:center;color:var(--text-3);padding:40px;font-size:.88rem">เลือกผู้รับบริการจากรายการด้านซ้าย</div>
           </div>
           <div class="chat-input-bar">
             <input class="chat-input" placeholder="พิมพ์ข้อความ..." id="chatInput" onkeydown="if(event.key==='Enter')sendMsg()">
@@ -888,8 +818,8 @@ textarea.form-input { min-height: 80px; resize: vertical; }
         <div class="card" style="background:linear-gradient(135deg,var(--mint-light),var(--sky-light))">
           <div class="section-title">นักจิตวิทยาของคุณ</div>
           <div style="display:flex;align-items:center;gap:12px">
-            <div class="user-avatar" style="width:48px;height:48px;font-size:1.1rem;background:var(--mint)">ส</div>
-            <div style="flex:1"><div style="font-weight:700">ดร. สุภาพร มั่นคง</div><div style="font-size:.78rem;color:var(--text-3)">จิตวิทยาคลินิก · 5 ปีประสบการณ์</div><div style="font-size:.75rem;color:var(--green-ok);margin-top:2px">🟢 ออนไลน์</div></div>
+            <div class="user-avatar" id="clCounselorAvatar" style="width:48px;height:48px;font-size:1.1rem;background:var(--mint)">?</div>
+            <div style="flex:1"><div style="font-weight:700" id="clCounselorName">-</div><div style="font-size:.78rem;color:var(--text-3)">นักจิตวิทยา</div><div style="font-size:.75rem;color:var(--green-ok);margin-top:2px">🟢 พร้อมให้บริการ</div></div>
           </div>
           <button class="btn btn-mint" style="width:100%;margin-top:14px;justify-content:center" onclick="showPage('chat-cl')">💬 แชทเลย</button>
         </div>
@@ -897,18 +827,16 @@ textarea.form-input { min-height: 80px; resize: vertical; }
       <div class="grid-2" style="margin-bottom:20px">
         <div class="card">
           <div class="section-title">ผลการประเมินล่าสุด</div>
-          <div style="display:flex;gap:12px">
+          <div id="clientLatestAssess" style="display:flex;gap:12px">
             <div style="flex:1;background:var(--surface-alt);border-radius:10px;padding:14px;text-align:center">
               <div style="font-size:.75rem;color:var(--text-3);font-weight:600">PHQ-9</div>
-              <div style="font-size:2rem;font-weight:800;color:var(--green-ok);font-family:'Inter',sans-serif">8</div>
-              <div class="progress-bar" style="margin:8px 0"><div class="progress-fill" style="width:30%;background:var(--green-ok)"></div></div>
-              <div style="font-size:.75rem;color:var(--green-ok);font-weight:700">น้อย</div>
+              <div style="font-size:2rem;font-weight:800;color:var(--text-3);font-family:'Inter',sans-serif" id="latestPHQ9">-</div>
+              <div style="font-size:.75rem;color:var(--text-3);font-weight:700" id="latestPHQ9Sev">ยังไม่มีข้อมูล</div>
             </div>
             <div style="flex:1;background:var(--surface-alt);border-radius:10px;padding:14px;text-align:center">
               <div style="font-size:.75rem;color:var(--text-3);font-weight:600">GAD-7</div>
-              <div style="font-size:2rem;font-weight:800;color:var(--green-ok);font-family:'Inter',sans-serif">6</div>
-              <div class="progress-bar" style="margin:8px 0"><div class="progress-fill" style="width:29%;background:var(--green-ok)"></div></div>
-              <div style="font-size:.75rem;color:var(--green-ok);font-weight:700">น้อย</div>
+              <div style="font-size:2rem;font-weight:800;color:var(--text-3);font-family:'Inter',sans-serif" id="latestGAD7">-</div>
+              <div style="font-size:.75rem;color:var(--text-3);font-weight:700" id="latestGAD7Sev">ยังไม่มีข้อมูล</div>
             </div>
           </div>
           <button class="btn btn-outline" style="width:100%;margin-top:12px;justify-content:center" onclick="showPage('assessments')">ทำแบบประเมินใหม่ →</button>
@@ -990,8 +918,8 @@ textarea.form-input { min-height: 80px; resize: vertical; }
       <div class="chat-layout" style="height:calc(100vh - 120px)">
         <div class="chat-main">
           <div class="chat-header">
-            <div class="user-avatar" style="background:var(--mint)">ส</div>
-            <div><div style="font-weight:700">ดร. สุภาพร มั่นคง</div><div style="font-size:.75rem;color:var(--green-ok)">🟢 ออนไลน์</div></div>
+            <div class="user-avatar" id="clChatCounselorAvatar" style="background:var(--mint)">?</div>
+            <div><div style="font-weight:700" id="clChatCounselorName">นักจิตวิทยา</div><div style="font-size:.75rem;color:var(--green-ok)">🟢 พร้อมให้บริการ</div></div>
           </div>
           <div class="chat-messages" id="chatMessagesClient">
             <div class="msg other"><div class="msg-bubble">สวัสดีค่ะ คุณสมชาย เป็นอย่างไรบ้างวันนี้คะ? 😊</div><div class="msg-time">เมื่อวาน 09:00</div></div>
@@ -1009,9 +937,9 @@ textarea.form-input { min-height: 80px; resize: vertical; }
     <div class="page" id="page-progress">
       <div class="page-header"><h2>📈 ความคืบหน้า</h2><p>ติดตามสุขภาพจิตของคุณ</p></div>
       <div class="grid-3" style="margin-bottom:20px">
-        <div class="stat-card accent-mint"><div class="stat-icon">😊</div><div class="stat-value">3.7</div><div class="stat-label">อารมณ์เฉลี่ย 14 วัน</div></div>
-        <div class="stat-card accent-sky"><div class="stat-icon">📉</div><div class="stat-value" style="color:var(--green-ok)">−8</div><div class="stat-label">คะแนน PHQ-9 ลดลง</div></div>
-        <div class="stat-card accent-green" style="border-top:3px solid var(--green-ok)"><div class="stat-icon">✅</div><div class="stat-value">5</div><div class="stat-label">เซสชันที่ผ่านมา</div></div>
+        <div class="stat-card accent-mint"><div class="stat-icon">😊</div><div class="stat-value" id="progressMoodAvg">-</div><div class="stat-label">อารมณ์เฉลี่ย (1=แย่, 5=ดี)</div></div>
+        <div class="stat-card accent-sky"><div class="stat-icon">📊</div><div class="stat-value" id="progressAssessCount">0</div><div class="stat-label">ครั้งที่ประเมินแล้ว</div></div>
+        <div class="stat-card accent-green" style="border-top:3px solid var(--green-ok)"><div class="stat-icon">📅</div><div class="stat-value" id="progressLastDate">-</div><div class="stat-label">ประเมินล่าสุด</div></div>
       </div>
       <div class="grid-2" style="margin-bottom:20px">
         <div class="card">
@@ -1038,28 +966,20 @@ textarea.form-input { min-height: 80px; resize: vertical; }
       <div class="page-header"><h2>👤 โปรไฟล์</h2></div>
       <div class="grid-2">
         <div class="card" style="text-align:center;padding:32px">
-          <div class="user-avatar" style="width:80px;height:80px;font-size:2rem;margin:0 auto 16px;background:var(--sky)">ส</div>
-          <div style="font-size:1.3rem;font-weight:800">สมชาย ใจดี</div>
-          <div style="color:var(--text-2);font-size:.88rem;margin-top:4px">client@demo.com</div>
+          <div class="user-avatar" id="clProfileAvatar" style="width:80px;height:80px;font-size:2rem;margin:0 auto 16px;background:var(--sky)">?</div>
+          <div style="font-size:1.3rem;font-weight:800" id="clProfileName">-</div>
+          <div style="color:var(--text-2);font-size:.88rem;margin-top:4px" id="clProfileEmail">-</div>
           <div class="badge badge-sky" style="margin-top:12px">💙 ผู้รับบริการ</div>
           <hr class="divider">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center">
-            <div><div style="font-size:1.2rem;font-weight:800">5</div><div style="font-size:.75rem;color:var(--text-3)">เซสชัน</div></div>
-            <div><div style="font-size:1.2rem;font-weight:800">8</div><div style="font-size:.75rem;color:var(--text-3)">ประเมิน</div></div>
-            <div><div style="font-size:1.2rem;font-weight:800">14</div><div style="font-size:.75rem;color:var(--text-3)">วันที่ติดตาม</div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:center">
+            <div><div style="font-size:1.2rem;font-weight:800" id="clProfileAssessCount">0</div><div style="font-size:.75rem;color:var(--text-3)">ครั้งที่ประเมิน</div></div>
+            <div><div style="font-size:1.2rem;font-weight:800" id="clProfileMoodCount">0</div><div style="font-size:.75rem;color:var(--text-3)">บันทึกอารมณ์</div></div>
           </div>
         </div>
         <div class="card">
-          <div class="section-title">นักจิตวิทยาของฉัน</div>
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
-            <div class="user-avatar" style="background:var(--mint)">ส</div>
-            <div><div style="font-weight:700">ดร. สุภาพร มั่นคง</div><div style="font-size:.78rem;color:var(--text-3)">จิตวิทยาคลินิก</div></div>
-            <div class="nav-badge" style="margin-left:auto;background:var(--green-ok)">ออนไลน์</div>
-          </div>
-          <hr class="divider">
           <div class="section-title">ตั้งค่า</div>
           <div style="display:flex;flex-direction:column;gap:4px">
-            <div class="nav-item" style="border-radius:8px"><span class="nav-icon">✏️</span> แก้ไขข้อมูลส่วนตัว</div>
+            <div class="nav-item" style="border-radius:8px;cursor:pointer" onclick="openEditProfile()"><span class="nav-icon">✏️</span> แก้ไขข้อมูลส่วนตัว</div>
             <div class="nav-item" style="border-radius:8px"><span class="nav-icon">🔒</span> เปลี่ยนรหัสผ่าน</div>
             <div class="nav-item" style="border-radius:8px"><span class="nav-icon">🛡️</span> ความเป็นส่วนตัว</div>
             <div class="nav-item" style="border-radius:8px"><span class="nav-icon">🔔</span> การแจ้งเตือน</div>
@@ -1452,6 +1372,9 @@ function setupApp(){
   drawCharts();
   updateProfilePage();
   renderClients();
+  renderDashboard();
+  renderChatRooms();
+  renderClientPages();
 }
 
 /* ══════════ SIDEBAR MOBILE ══════════ */
@@ -1480,6 +1403,10 @@ function showPage(id){
   });
   document.querySelector('.content-area').scrollTop=0;
   if(id==='progress') setTimeout(drawCharts,100);
+  // Subscribe client chat when navigating to client-chat page
+  if(id==='client-chat' && currentRole==='client' && activeChatRoomId){
+    setTimeout(()=>subscribeChat('chatMessagesClient', activeChatRoomId, true), 100);
+  }
   // Sync bottom nav active
   document.querySelectorAll('.bnav-item').forEach(b=>{
     const onclick = b.getAttribute('onclick')||'';
@@ -1516,6 +1443,9 @@ function renderSessions(){
   `).join('');
   renderClients();
   updateProfilePage();
+  renderDashboard();
+  renderChatRooms();
+  renderClientPages();
 }
 function openNewSession(){
   document.getElementById('sClientName').value='';
@@ -1663,43 +1593,261 @@ function showClientDetail(name,initial,color,sessions,phq9sev,gad7score,gad7sev,
   openModal('clientModal');
 }
 
+/* ══════════ DASHBOARD (Counselor) ══════════ */
+function renderDashboard(){
+  if(currentRole !== 'counselor') return;
+  const uniqueClients = [...new Set(sessions.map(s=>s.client||s.clientName).filter(Boolean))];
+  const el = id => document.getElementById(id);
+  if(el('dashClients')) el('dashClients').textContent = uniqueClients.length;
+  if(el('dashSessions')) el('dashSessions').textContent = sessions.length;
+  const withFollowUp = sessions.filter(s=>(s.followUp||s.followUpPlan||'').trim()).length;
+  if(el('dashFollowUp')) el('dashFollowUp').textContent = withFollowUp;
+  const durations = sessions.map(s=>parseInt(s.duration)||0).filter(d=>d>0);
+  const avgDur = durations.length ? Math.round(durations.reduce((a,b)=>a+b,0)/durations.length) : 0;
+  if(el('dashAvgDur')) el('dashAvgDur').innerHTML = avgDur ? avgDur+'<span style="font-size:.9rem;font-weight:500">น.</span>' : '-';
+
+  // Recent sessions
+  const recent = sessions.slice(0,3);
+  const colors = ['var(--mint)','var(--sky)','var(--amber)','var(--coral)'];
+  if(el('dashRecentSessions')){
+    if(recent.length === 0){
+      el('dashRecentSessions').innerHTML='<div style="text-align:center;color:var(--text-3);padding:20px;font-size:.88rem">ยังไม่มีบันทึก CO</div>';
+    } else {
+      el('dashRecentSessions').innerHTML = recent.map((s,i)=>{
+        const name = s.client||s.clientName||'-';
+        const techs = (s.techniques||[]).slice(0,2).map(t=>`<span class="chip">${t}</span>`).join('');
+        return `<div style="display:flex;align-items:center;gap:12px">
+          <div class="user-avatar" style="background:${colors[i%colors.length]}">${name.charAt(0)}</div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:.9rem">${name}</div>
+            <div style="font-size:.78rem;color:var(--text-3)">${s.date||''} · ${s.duration||60} นาที</div>
+            <div style="margin-top:4px">${techs}</div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="showPage('sessions')">ดู</button>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Client status
+  if(el('dashClientStatus')){
+    if(uniqueClients.length === 0){
+      el('dashClientStatus').innerHTML='<div style="text-align:center;color:var(--text-3);padding:20px;font-size:.88rem">ยังไม่มีข้อมูล</div>';
+    } else {
+      el('dashClientStatus').innerHTML = uniqueClients.slice(0,4).map((name,i)=>{
+        const count = sessions.filter(s=>(s.client||s.clientName)===name).length;
+        const pct = Math.min(Math.round(count/Math.max(sessions.length,1)*100),100);
+        return `<div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:.85rem;font-weight:600">${name}</span>
+            <span style="font-size:.78rem;color:var(--text-3)">${count} เซสชัน</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${colors[i%colors.length]}"></div></div>
+        </div>`;
+      }).join('');
+    }
+  }
+}
+
+/* ══════════ CHAT ROOMS (Counselor) ══════════ */
+function renderChatRooms(){
+  const list = document.getElementById('chatRoomList');
+  if(!list) return;
+  const clients = [...new Set(sessions.map(s=>s.client||s.clientName).filter(Boolean))];
+  const colors = ['var(--mint)','var(--sky)','var(--amber)','var(--coral)','#9B8FD9'];
+  if(clients.length === 0){
+    list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text-3);font-size:.85rem">เพิ่มบันทึก CO เพื่อสร้างห้องแชท</div>';
+    return;
+  }
+  list.innerHTML = clients.map((name,i)=>{
+    const col = colors[i%colors.length];
+    const init = name.charAt(0);
+    return `<div class="chat-room-item" onclick="selectRoom(this,'${name}','${init}','${col}')">
+      <div class="chat-room-avatar" style="background:${col}">${init}</div>
+      <div style="flex:1;min-width:0">
+        <div class="chat-room-name">${name}</div>
+        <div class="chat-room-last">แตะเพื่อเริ่มแชท</div>
+      </div>
+    </div>`;
+  }).join('');
+  // Auto-select first room
+  const first = list.querySelector('.chat-room-item');
+  if(first) first.click();
+}
+
+/* ══════════ CLIENT PAGES ══════════ */
+function renderClientPages(){
+  if(currentRole !== 'client') return;
+  const name = currentUser?.displayName || currentUser?.email || '-';
+  const email = currentUser?.email || '-';
+  const initial = name.charAt(0)||'?';
+
+  // Client profile
+  const set = (id,val)=>{ const e=document.getElementById(id); if(e) e.textContent=val; };
+  set('clProfileName', name);
+  set('clProfileEmail', email);
+  const av = document.getElementById('clProfileAvatar');
+  if(av){ av.textContent=initial; }
+  set('clProfileAssessCount', assessHistory.length);
+  const moods = lsLoad('moods',[]);
+  set('clProfileMoodCount', moods.length);
+
+  // Client home - counselor info (look up from Firestore sessions)
+  const cachedCo = lsLoad('myCounselor', null);
+  const coName = cachedCo?.displayName || 'นักจิตวิทยาของคุณ';
+  set('clCounselorName', coName);
+  const cav = document.getElementById('clCounselorAvatar'); if(cav) cav.textContent=cachedCo?cachedCo.displayName.charAt(0):'🩺';
+  const chatCav = document.getElementById('clChatCounselorAvatar'); if(chatCav) chatCav.textContent=cachedCo?cachedCo.displayName.charAt(0):'🩺';
+  const chatCname = document.getElementById('clChatCounselorName'); if(chatCname) chatCname.textContent=coName;
+  // Set up client chat room if we know counselor
+  if(cachedCo?.uid && !activeChatRoomId){
+    const clientName = currentUser?.displayName || currentUser?.email || '';
+    activeChatRoomId = chatRoomId(cachedCo.uid, clientName);
+    subscribeChat('chatMessagesClient', activeChatRoomId, true);
+  }
+  // Try to find counselor from Firestore (background)
+  if(!cachedCo && currentUser?.uid){
+    const myName = currentUser?.displayName || currentUser?.email || '';
+    db.collection('sessions').where('clientName','==',myName).limit(1).get()
+      .then(snap=>{ if(!snap.empty){ const s=snap.docs[0].data();
+        const coUid=s.counselorId||s.counselorUid||'';
+        if(coUid){ db.collection('users').doc(coUid).get().then(ud=>{
+          const coProfile={ uid:coUid, displayName:ud.data()?.fullName||ud.data()?.displayName||'นักจิตวิทยา' };
+          lsSave('myCounselor', coProfile);
+          set('clCounselorName', coProfile.displayName);
+          set('clChatCounselorName', coProfile.displayName);
+          if(!activeChatRoomId){ activeChatRoomId = chatRoomId(coUid, myName); subscribeChat('chatMessagesClient', activeChatRoomId, true); }
+        }).catch(()=>{}); }
+      }}).catch(()=>{});
+  }
+
+  // Latest assessment scores
+  const phq9 = assessHistory.find(a=>a.type==='PHQ-9');
+  const gad7 = assessHistory.find(a=>a.type==='GAD-7');
+  const sevColor = sev => sev==='น้อยมาก'||sev==='น้อย'?'var(--green-ok)':sev==='ปานกลาง'?'var(--amber)':'var(--coral)';
+  const phqEl = document.getElementById('latestPHQ9'), phqSev = document.getElementById('latestPHQ9Sev');
+  if(phqEl){ phqEl.textContent=phq9?phq9.score:'-'; phqEl.style.color=phq9?sevColor(phq9.severity):'var(--text-3)'; }
+  if(phqSev){ phqSev.textContent=phq9?phq9.severity:'ยังไม่มีข้อมูล'; phqSev.style.color=phq9?sevColor(phq9.severity):'var(--text-3)'; }
+  const gadEl = document.getElementById('latestGAD7'), gadSev = document.getElementById('latestGAD7Sev');
+  if(gadEl){ gadEl.textContent=gad7?gad7.score:'-'; gadEl.style.color=gad7?sevColor(gad7.severity):'var(--text-3)'; }
+  if(gadSev){ gadSev.textContent=gad7?gad7.severity:'ยังไม่มีข้อมูล'; gadSev.style.color=gad7?sevColor(gad7.severity):'var(--text-3)'; }
+
+  // Progress stats
+  const moodVals = moods.slice(0,14).map(m=>parseInt(m.mood)||0).filter(v=>v>0);
+  const avgMood = moodVals.length ? (moodVals.reduce((a,b)=>a+b,0)/moodVals.length).toFixed(1) : '-';
+  set('progressMoodAvg', avgMood);
+  set('progressAssessCount', assessHistory.length);
+  set('progressLastDate', assessHistory.length ? assessHistory[0].date : '-');
+}
+
 /* ══════════ CHAT ══════════ */
+// chatRoomId = counselorUid_clientName (shared key between CO and Client)
+let activeChatUnsub = null;
+let activeChatRoomId = null;
+
+function chatRoomId(counselorUid, clientName){
+  // Normalize: strip whitespace, lowercase for key
+  return (counselorUid||'demo') + '_' + (clientName||'').trim().toLowerCase().replace(/\s+/g,'_');
+}
+
 function selectRoom(el, name, initial, color) {
   document.querySelectorAll('.chat-room-item').forEach(r=>r.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('chatAvatar').textContent=initial;
   document.getElementById('chatAvatar').style.background=color;
   document.getElementById('chatName').textContent=name;
-  document.getElementById('chatMessages').innerHTML=`<div class="msg other"><div class="msg-bubble">สวัสดีครับ ${name}</div><div class="msg-time">09:00</div></div>`;
+  // Unsubscribe previous listener
+  if(activeChatUnsub){ activeChatUnsub(); activeChatUnsub=null; }
+  activeChatRoomId = chatRoomId(currentUser?.uid, name);
+  document.getElementById('chatMessages').innerHTML='<div style="text-align:center;color:var(--text-3);padding:24px;font-size:.85rem">กำลังโหลดข้อความ...</div>';
+  subscribeChat('chatMessages', activeChatRoomId, false);
 }
-function sendMsg(){
+
+function subscribeChat(containerId, roomId, isClient){
+  // Load from localStorage first (offline cache)
+  const cached = lsLoad('chat_'+roomId, []);
+  renderChatMessages(containerId, cached, isClient);
+  // Then subscribe Firestore real-time
+  try {
+    const unsub = db.collection('chats').doc(roomId).collection('messages')
+      .orderBy('sentAt','asc').limit(100)
+      .onSnapshot(snap=>{
+        const msgs = snap.docs.map(d=>({...d.data(), id:d.id}));
+        lsSave('chat_'+roomId, msgs.map(m=>({sender:m.sender,role:m.role,text:m.text,sentAt:m.sentAt?.toDate?.()?.toISOString()||m.sentAt})));
+        renderChatMessages(containerId, msgs, isClient);
+      }, err=>{ console.warn('Chat subscribe err:', err.message); });
+    if(isClient) activeChatUnsub = unsub; else activeChatUnsub = unsub;
+  } catch(e){ console.warn('subscribeChat:', e.message); }
+}
+
+function renderChatMessages(containerId, msgs, isClient){
+  const c = document.getElementById(containerId);
+  if(!c) return;
+  if(msgs.length===0){
+    c.innerHTML='<div style="text-align:center;color:var(--text-3);padding:32px;font-size:.85rem">ยังไม่มีข้อความ<br>เริ่มการสนทนาได้เลย 💬</div>';
+    return;
+  }
+  c.innerHTML = msgs.map(m=>{
+    const myRole = isClient ? 'client' : 'counselor';
+    const isMine = m.role === myRole;
+    const ts = m.sentAt ? (m.sentAt.toDate ? m.sentAt.toDate() : new Date(m.sentAt)) : new Date();
+    const time = ts.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="msg ${isMine?'mine':'other'}"><div class="msg-bubble">${escHtml(m.text||'')}</div><div class="msg-time">${time}</div></div>`;
+  }).join('');
+  c.scrollTop = c.scrollHeight;
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function sendMsg(){
   const inp=document.getElementById('chatInput');
-  const txt=inp.value.trim();if(!txt)return;
-  addMsg('chatMessages','mine',txt);
+  const txt=inp.value.trim();if(!txt||!activeChatRoomId)return;
   inp.value='';
-  setTimeout(()=>addMsg('chatMessages','other','ขอบคุณครับ รับทราบแล้ว 👍'),1200);
+  const msg = { sender: currentUser?.displayName||currentUser?.email||'นักจิตวิทยา', role:'counselor', text:txt, sentAt:firebase.firestore.FieldValue.serverTimestamp() };
+  try {
+    await db.collection('chats').doc(activeChatRoomId).collection('messages').add(msg);
+  } catch(e){
+    // Offline fallback: add locally
+    addMsg('chatMessages','mine',txt);
+    console.warn('sendMsg Firestore:', e.message);
+  }
 }
-function sendMsgClient(){
+
+async function sendMsgClient(){
   const inp=document.getElementById('chatInputClient');
   const txt=inp.value.trim();if(!txt)return;
-  addMsg('chatMessagesClient','mine',txt);
   inp.value='';
-  const replies=['เข้าใจค่ะ ขอบคุณที่แชร์ความรู้สึก 💙','มีอะไรอื่นอยากพูดถึงไหมคะ?','ดิฉันรับฟังอยู่นะคะ ไม่ต้องรีบ','ยอดเยี่ยมมากเลยค่ะ ทำต่อไปนะคะ! ✨'];
-  setTimeout(()=>addMsg('chatMessagesClient','other',replies[Math.floor(Math.random()*replies.length)]),1500);
+  if(!activeChatRoomId) { addMsg('chatMessagesClient','mine',txt); return; }
+  const msg = { sender: currentUser?.displayName||currentUser?.email||'ผู้รับบริการ', role:'client', text:txt, sentAt:firebase.firestore.FieldValue.serverTimestamp() };
+  try {
+    await db.collection('chats').doc(activeChatRoomId).collection('messages').add(msg);
+  } catch(e){
+    addMsg('chatMessagesClient','mine',txt);
+    console.warn('sendMsgClient Firestore:', e.message);
+  }
 }
+
 function addMsg(containerId, type, text){
   const now=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
   const c=document.getElementById(containerId);
+  if(!c) return;
   const div=document.createElement('div');div.className=`msg ${type}`;
-  div.innerHTML=`<div class="msg-bubble">${text}</div><div class="msg-time">${now}</div>`;
+  div.innerHTML=`<div class="msg-bubble">${escHtml(text)}</div><div class="msg-time">${now}</div>`;
   c.appendChild(div);c.scrollTop=c.scrollHeight;
 }
 
 /* ══════════ ASSESSMENT ══════════ */
 function renderAssessHistory(){
   const tbody=document.getElementById('assessHistBody');
+  if(!tbody) return;
   const colors={'น้อยมาก':'var(--green-ok)','น้อย':'#7DC080','ปานกลาง':'var(--amber)','ค่อนข้างรุนแรง':'var(--coral)','รุนแรง':'#C0392B'};
-  tbody.innerHTML=assessHistory.map(h=>`<tr><td>${h.type}</td><td style="font-family:'Inter',sans-serif;font-weight:700">${h.score}/${h.max}</td><td><span style="font-weight:700;color:${colors[h.severity]||'var(--text)'}">${h.severity}</span></td><td style="color:var(--text-3)">${h.date}</td></tr>`).join('');
+  if(assessHistory.length===0){
+    tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-3);padding:20px">ยังไม่มีประวัติการประเมิน</td></tr>';
+  } else {
+    tbody.innerHTML=assessHistory.map(h=>`<tr><td>${h.type}</td><td style="font-family:'Inter',sans-serif;font-weight:700">${h.score}/${h.max}</td><td><span style="font-weight:700;color:${colors[h.severity]||'var(--text)'}">${h.severity}</span></td><td style="color:var(--text-3)">${h.date}</td></tr>`).join('');
+  }
+  renderClientPages();
+  drawCharts();
 }
 function startAssessment(type){
   assessType=type;
@@ -1804,13 +1952,15 @@ function drawMoodChart(){
   c.width=c.parentElement.clientWidth-40||380;
   const ctx=c.getContext('2d');
   const w=c.width,h=c.height;
-  const moods=[3,3,4,2,3,4,4,5,4,3,4,5,4,4];
+  // Use real mood data from localStorage
+  const moodData = lsLoad('moods',[]).slice(0,14).reverse();
+  const moodVals = moodData.length > 0 ? moodData.map(m=>parseInt(m.mood)||3) : [3,3,3,3,3,3,3];
   const moodColors=['','#E07B6A','#F0A070','#E6A94A','#7DC080','#3DAA7D'];
   ctx.clearRect(0,0,w,h);
   const padL=8,padR=8,padT=10,padB=28;
-  const bw=(w-padL-padR)/moods.length-3;
+  const bw=(w-padL-padR)/moodVals.length-3;
   const ch=h-padT-padB;
-  moods.forEach((m,i)=>{
+  moodVals.forEach((m,i)=>{
     const bh=(m/5)*ch;
     const x=padL+i*(bw+3);
     const y=padT+ch-bh;
@@ -1819,9 +1969,9 @@ function drawMoodChart(){
     ctx.beginPath();ctx.roundRect(x,y,bw,bh,4);ctx.fill();
     ctx.fillStyle=col;
     ctx.beginPath();ctx.roundRect(x,y,bw,Math.min(bh,6),4);ctx.fill();
-    ctx.fillStyle='var(--text-3)';
+    ctx.fillStyle='#888';
     ctx.font='9px Inter,sans-serif';ctx.textAlign='center';
-    const day=new Date(Date.now()-(13-i)*86400000).getDate();
+    const day=moodData[i]?new Date(moodData[i].recordedAt).getDate():i+1;
     ctx.fillText(day,x+bw/2,h-6);
   });
 }
@@ -1831,8 +1981,11 @@ function drawPHQ9Chart(){
   c.width=c.parentElement.clientWidth-40||380;
   const ctx=c.getContext('2d');
   const w=c.width,h=c.height;
-  const data=[16,14,12,10,8];
-  const labels=['ก.ค.','15 ก.ค.','ส.ค.','15 ส.ค.','ปัจจุบัน'];
+  // Use real PHQ-9 data
+  const phq = assessHistory.filter(a=>a.type==='PHQ-9').slice(0,6).reverse();
+  const data = phq.length > 1 ? phq.map(a=>a.score) : (phq.length===1?[phq[0].score]:[]);
+  const labels = phq.length > 0 ? phq.map(a=>a.date||'') : [];
+  if(data.length < 2){ ctx.clearRect(0,0,w,h); ctx.fillStyle='#aaa'; ctx.font='13px sans-serif'; ctx.textAlign='center'; ctx.fillText('ทำแบบประเมิน PHQ-9 อย่างน้อย 2 ครั้ง เพื่อดูแนวโน้ม',w/2,h/2); return; }
   drawLineChart(ctx,w,h,data,27,'#3DAA7D',labels);
 }
 function drawGAD7Chart(){
@@ -1840,8 +1993,11 @@ function drawGAD7Chart(){
   c.width=c.parentElement.clientWidth-40||780;
   const ctx=c.getContext('2d');
   const w=c.width,h=c.height;
-  const data=[13,11,10,8,6];
-  const labels=['ก.ค.','15 ก.ค.','ส.ค.','15 ส.ค.','ปัจจุบัน'];
+  // Use real GAD-7 data
+  const gad = assessHistory.filter(a=>a.type==='GAD-7').slice(0,6).reverse();
+  const data = gad.length > 1 ? gad.map(a=>a.score) : [];
+  const labels = gad.length > 0 ? gad.map(a=>a.date||'') : [];
+  if(data.length < 2){ ctx.clearRect(0,0,w,h); ctx.fillStyle='#aaa'; ctx.font='13px sans-serif'; ctx.textAlign='center'; ctx.fillText('ทำแบบประเมิน GAD-7 อย่างน้อย 2 ครั้ง เพื่อดูแนวโน้ม',w/2,h/2); return; }
   drawLineChart(ctx,w,h,data,21,'#6BAED6',labels);
 }
 
