@@ -1,0 +1,147 @@
+rules_version = '2';
+
+// จิตใจดี (Jitjai Dee) — Firestore Security Rules
+//
+// หลักการ:
+//   - ต้อง login เสมอ (ไม่มี public read/write)
+//   - ข้อมูลสุขภาพจิต (บันทึก CO, แบบประเมิน, อารมณ์) เป็นข้อมูลอ่อนไหว
+//     จึงจำกัดให้เจ้าของข้อมูลเท่านั้นที่เข้าถึงได้
+//   - การจับคู่ CO กับผู้รับบริการใช้ "อีเมล" เป็น key เพราะอีเมลอยู่ใน
+//     auth token (request.auth.token.email) จึงตรวจสอบได้จริงใน rules
+//     (ชื่อที่พิมพ์เองตรวจสอบไม่ได้ — ใครก็อ้างได้)
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── helpers ──────────────────────────────────────────────
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function myUid() {
+      return request.auth.uid;
+    }
+
+    // อีเมลจาก token (ผ่านการยืนยันโดย Firebase Auth แล้ว)
+    function myEmail() {
+      return signedIn() && request.auth.token.email != null
+        ? request.auth.token.email.lower()
+        : '';
+    }
+
+    function isCounselor() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(myUid()))
+        && get(/databases/$(database)/documents/users/$(myUid())).data.role == 'counselor';
+    }
+
+    // roomId = "<counselorUid>__<clientEmail>"
+    // uid ของ Firebase เป็น [A-Za-z0-9] เท่านั้น จึงไม่มี "__" ปนอยู่
+    function roomCounselorUid(roomId) {
+      return roomId.split('__')[0];
+    }
+
+    function isRoomCounselor(roomId) {
+      return signedIn() && roomCounselorUid(roomId) == myUid();
+    }
+
+    // เทียบทั้งสตริงแบบตรงตัว ปลอดภัยกว่าการ split ฝั่งอีเมล
+    function isRoomClient(roomId) {
+      return myEmail() != ''
+        && roomId == roomCounselorUid(roomId) + '__' + myEmail();
+    }
+
+    function isRoomMember(roomId) {
+      return isRoomCounselor(roomId) || isRoomClient(roomId);
+    }
+
+    // ── users: โปรไฟล์ผู้ใช้ ──────────────────────────────────
+    // อ่าน/เขียนได้เฉพาะโปรไฟล์ของตัวเอง
+    // (ชื่อ CO ส่งถึงผู้รับบริการผ่าน clientLinks จึงไม่ต้องเปิดให้อ่านข้ามคน)
+    match /users/{userId} {
+      allow read: if signedIn() && userId == myUid();
+      allow create: if signedIn() && userId == myUid()
+                    && request.resource.data.role in ['counselor', 'client'];
+      // ห้ามเปลี่ยน role ของตัวเองภายหลัง (กันการยกระดับสิทธิ์)
+      allow update: if signedIn() && userId == myUid()
+                    && request.resource.data.role == resource.data.role;
+      allow delete: if false;
+    }
+
+    // ── sessions: บันทึกการให้คำปรึกษา (อ่อนไหวที่สุด) ────────
+    // เฉพาะนักจิตวิทยาเจ้าของบันทึกเท่านั้น — ผู้รับบริการอ่านไม่ได้
+    match /sessions/{sessionId} {
+      allow read: if signedIn() && resource.data.counselorId == myUid();
+      allow create: if signedIn()
+                    && request.resource.data.counselorId == myUid();
+      allow update: if signedIn()
+                    && resource.data.counselorId == myUid()
+                    && request.resource.data.counselorId == myUid();
+      allow delete: if signedIn() && resource.data.counselorId == myUid();
+    }
+
+    // ── assessments: ผลแบบประเมิน PHQ-9 / GAD-7 / SWLS ───────
+    match /assessments/{assessmentId} {
+      allow read: if signedIn() && resource.data.userId == myUid();
+      allow create: if signedIn() && request.resource.data.userId == myUid();
+      allow update: if signedIn()
+                    && resource.data.userId == myUid()
+                    && request.resource.data.userId == myUid();
+      allow delete: if signedIn() && resource.data.userId == myUid();
+    }
+
+    // ── moods: บันทึกอารมณ์ประจำวัน ──────────────────────────
+    match /moods/{moodId} {
+      allow read: if signedIn() && resource.data.userId == myUid();
+      allow create: if signedIn() && request.resource.data.userId == myUid();
+      allow update: if signedIn()
+                    && resource.data.userId == myUid()
+                    && request.resource.data.userId == myUid();
+      allow delete: if signedIn() && resource.data.userId == myUid();
+    }
+
+    // ── clientLinks: จับคู่ผู้รับบริการ ↔ นักจิตวิทยา ─────────
+    // doc id = อีเมลผู้รับบริการ (ตัวพิมพ์เล็ก)
+    // อ่านได้เฉพาะเจ้าของอีเมลนั้น หรือ CO ที่ผูกไว้
+    // เขียนได้เฉพาะนักจิตวิทยา และผูกกับ uid ของตัวเองเท่านั้น
+    match /clientLinks/{clientEmail} {
+      allow read: if signedIn()
+                  && (clientEmail == myEmail() || resource.data.counselorId == myUid());
+      allow create: if isCounselor()
+                    && request.resource.data.counselorId == myUid()
+                    && request.resource.data.clientEmail == clientEmail;
+      allow update: if isCounselor()
+                    && resource.data.counselorId == myUid()
+                    && request.resource.data.counselorId == myUid();
+      allow delete: if isCounselor() && resource.data.counselorId == myUid();
+    }
+
+    // ── chats: ห้องสนทนา CO ↔ ผู้รับบริการ ────────────────────
+    // roomId = "<counselorUid>__<clientEmail>"
+    match /chats/{roomId} {
+      allow read, write: if isRoomMember(roomId);
+
+      match /messages/{messageId} {
+        allow read: if isRoomMember(roomId);
+
+        // ส่งข้อความได้เฉพาะคู่สนทนา และต้องระบุ role ตรงกับตัวจริง
+        // (กันไม่ให้ผู้รับบริการปลอมเป็นนักจิตวิทยา และกลับกัน)
+        allow create: if isRoomMember(roomId)
+                      && request.resource.data.text is string
+                      && request.resource.data.text.size() > 0
+                      && request.resource.data.text.size() <= 4000
+                      && request.resource.data.role == (isRoomCounselor(roomId) ? 'counselor' : 'client');
+
+        // ข้อความที่ส่งแล้วแก้ไม่ได้ ลบได้เฉพาะคนที่ส่งเอง
+        allow update: if false;
+        allow delete: if isRoomMember(roomId)
+                      && resource.data.role == (isRoomCounselor(roomId) ? 'counselor' : 'client');
+      }
+    }
+
+    // ── ปฏิเสธทุกอย่างที่เหลือ ────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1001,6 +1001,7 @@ textarea.form-input { min-height: 80px; resize: vertical; }
     </div>
     <div class="form-group-inline">
       <div class="form-group"><label>ชื่อผู้รับบริการ *</label><input class="form-input" id="sClientName" placeholder="ชื่อ-นามสกุล"></div>
+      <div class="form-group"><label>อีเมลผู้รับบริการ</label><input class="form-input" id="sClientEmail" type="email" placeholder="client@example.com"><div style="font-size:.75rem;color:var(--text-3);margin-top:4px">ใส่อีเมลเดียวกับที่ผู้รับบริการใช้สมัคร เพื่อเปิดแชทถึงกัน</div></div>
       <div class="form-group"><label>วันที่</label><input class="form-input" type="date" id="sDate"></div>
     </div>
     <div class="form-group"><label>ระยะเวลา (นาที)</label><input class="form-input" type="number" id="sDuration" placeholder="60" value="60"></div>
@@ -1449,6 +1450,7 @@ function renderSessions(){
 }
 function openNewSession(){
   document.getElementById('sClientName').value='';
+  document.getElementById('sClientEmail').value='';
   document.getElementById('sProblem').value='';
   document.getElementById('sNotes').value='';
   document.getElementById('sFollowUp').value='';
@@ -1462,9 +1464,11 @@ function toggleTech(btn,t){btn.classList.toggle('on');if(selectedTechs.includes(
 async function saveSession(){
   const cn=document.getElementById('sClientName').value.trim();
   const pr=document.getElementById('sProblem').value.trim();
+  const ce=(document.getElementById('sClientEmail').value||'').trim().toLowerCase();
   if(!cn||!pr){alert('กรุณากรอกชื่อผู้รับบริการและปัญหา');return;}
+  if(ce && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ce)){alert('รูปแบบอีเมลไม่ถูกต้อง');return;}
   const data={
-    counselorId:currentUser?.uid||'demo', clientName:cn,
+    counselorId:currentUser?.uid||'demo', clientName:cn, clientEmail:ce,
     date:document.getElementById('sDate').value,
     duration:parseInt(document.getElementById('sDuration').value)||60,
     presentingProblem:pr, techniques:[...selectedTechs],
@@ -1472,7 +1476,7 @@ async function saveSession(){
     followUpPlan:document.getElementById('sFollowUp').value,
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
   };
-  const s={id:'temp-'+Date.now(),client:cn,date:data.date,duration:data.duration,
+  const s={id:'temp-'+Date.now(),client:cn,clientEmail:ce,date:data.date,duration:data.duration,
     problem:pr,techniques:[...selectedTechs],notes:data.notes,followUp:data.followUpPlan};
   sessions.unshift(s); renderSessions(); closeModal('sessionModal'); showPage('sessions');
   if(currentUser?.uid && !currentUser.uid.startsWith('demo-')){
@@ -1481,6 +1485,15 @@ async function saveSession(){
     showToast('💾 บันทึกสำเร็จ!');
     // Try Firestore in background
     db.collection('sessions').add(data).then(ref=>{ s.id=ref.id; lsSave('sessions',sessions); }).catch(e=>console.warn('Firestore session sync:',e.message));
+    // Publish a link doc so the client can find their counselor (rules-safe: keyed by client email)
+    if(ce){
+      db.collection('clientLinks').doc(ce).set({
+        clientEmail:ce, clientName:cn,
+        counselorId:currentUser.uid,
+        counselorName:currentUser.displayName||currentUser.email||'นักจิตวิทยา',
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      },{merge:true}).catch(e=>console.warn('clientLink sync:',e.message));
+    }
   } else { showToast('⚠️ โหมดทดลอง — ข้อมูลไม่บันทึกจริง',false); }
 }
 async function deleteSession(id){
@@ -1653,20 +1666,30 @@ function renderDashboard(){
 function renderChatRooms(){
   const list = document.getElementById('chatRoomList');
   if(!list) return;
-  const clients = [...new Set(sessions.map(s=>s.client||s.clientName).filter(Boolean))];
+  // One room per unique client; a room needs the client's email to be reachable by them
+  const byName = new Map();
+  sessions.forEach(s=>{
+    const name = s.client||s.clientName;
+    if(!name) return;
+    const email = (s.clientEmail||'').trim().toLowerCase();
+    if(!byName.has(name) || (email && !byName.get(name))) byName.set(name, email);
+  });
+  const clients = [...byName.entries()];
   const colors = ['var(--mint)','var(--sky)','var(--amber)','var(--coral)','#9B8FD9'];
   if(clients.length === 0){
     list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text-3);font-size:.85rem">เพิ่มบันทึก CO เพื่อสร้างห้องแชท</div>';
     return;
   }
-  list.innerHTML = clients.map((name,i)=>{
+  list.innerHTML = clients.map(([name,email],i)=>{
     const col = colors[i%colors.length];
     const init = name.charAt(0);
-    return `<div class="chat-room-item" onclick="selectRoom(this,'${name}','${init}','${col}')">
+    const sub = email ? email : 'ยังไม่มีอีเมล — แก้ไขบันทึกเพื่อเปิดแชท';
+    const arg = s=>String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<div class="chat-room-item" onclick="selectRoom(this,'${arg(name)}','${arg(email)}','${init}','${col}')">
       <div class="chat-room-avatar" style="background:${col}">${init}</div>
       <div style="flex:1;min-width:0">
-        <div class="chat-room-name">${name}</div>
-        <div class="chat-room-last">แตะเพื่อเริ่มแชท</div>
+        <div class="chat-room-name">${escHtml(name)}</div>
+        <div class="chat-room-last">${escHtml(sub)}</div>
       </div>
     </div>`;
   }).join('');
@@ -1699,26 +1722,30 @@ function renderClientPages(){
   const cav = document.getElementById('clCounselorAvatar'); if(cav) cav.textContent=cachedCo?cachedCo.displayName.charAt(0):'🩺';
   const chatCav = document.getElementById('clChatCounselorAvatar'); if(chatCav) chatCav.textContent=cachedCo?cachedCo.displayName.charAt(0):'🩺';
   const chatCname = document.getElementById('clChatCounselorName'); if(chatCname) chatCname.textContent=coName;
-  // Set up client chat room if we know counselor
-  if(cachedCo?.uid && !activeChatRoomId){
-    const clientName = currentUser?.displayName || currentUser?.email || '';
-    activeChatRoomId = chatRoomId(cachedCo.uid, clientName);
+  const myEmail = (currentUser?.email||'').trim().toLowerCase();
+  // Set up client chat room if we already know the counselor
+  if(cachedCo?.uid && myEmail && !activeChatRoomId){
+    activeChatRoomId = chatRoomId(cachedCo.uid, myEmail);
     subscribeChat('chatMessagesClient', activeChatRoomId, true);
   }
-  // Try to find counselor from Firestore (background)
-  if(!cachedCo && currentUser?.uid){
-    const myName = currentUser?.displayName || currentUser?.email || '';
-    db.collection('sessions').where('clientName','==',myName).limit(1).get()
-      .then(snap=>{ if(!snap.empty){ const s=snap.docs[0].data();
-        const coUid=s.counselorId||s.counselorUid||'';
-        if(coUid){ db.collection('users').doc(coUid).get().then(ud=>{
-          const coProfile={ uid:coUid, displayName:ud.data()?.fullName||ud.data()?.displayName||'นักจิตวิทยา' };
-          lsSave('myCounselor', coProfile);
-          set('clCounselorName', coProfile.displayName);
-          set('clChatCounselorName', coProfile.displayName);
-          if(!activeChatRoomId){ activeChatRoomId = chatRoomId(coUid, myName); subscribeChat('chatMessagesClient', activeChatRoomId, true); }
-        }).catch(()=>{}); }
-      }}).catch(()=>{});
+  // Resolve counselor from the link doc the counselor published (readable only by this client)
+  if(!cachedCo && myEmail){
+    db.collection('clientLinks').doc(myEmail).get()
+      .then(doc=>{
+        if(!doc.exists) return;
+        const l = doc.data();
+        if(!l.counselorId) return;
+        const coProfile = { uid:l.counselorId, displayName:l.counselorName||'นักจิตวิทยา' };
+        lsSave('myCounselor', coProfile);
+        set('clCounselorName', coProfile.displayName);
+        set('clChatCounselorName', coProfile.displayName);
+        const a=document.getElementById('clCounselorAvatar'); if(a) a.textContent=coProfile.displayName.charAt(0);
+        const b=document.getElementById('clChatCounselorAvatar'); if(b) b.textContent=coProfile.displayName.charAt(0);
+        if(!activeChatRoomId){
+          activeChatRoomId = chatRoomId(l.counselorId, myEmail);
+          subscribeChat('chatMessagesClient', activeChatRoomId, true);
+        }
+      }).catch(e=>console.warn('clientLink lookup:', e.message));
   }
 
   // Latest assessment scores
@@ -1745,12 +1772,14 @@ function renderClientPages(){
 let activeChatUnsub = null;
 let activeChatRoomId = null;
 
-function chatRoomId(counselorUid, clientName){
-  // Normalize: strip whitespace, lowercase for key
-  return (counselorUid||'demo') + '_' + (clientName||'').trim().toLowerCase().replace(/\s+/g,'_');
+// Room id encodes both participants so security rules can verify them without extra reads:
+//   <counselorUid>__<clientEmail>
+// Counselor proves ownership via the uid prefix; client via their verified token email.
+function chatRoomId(counselorUid, clientEmail){
+  return (counselorUid||'demo') + '__' + (clientEmail||'').trim().toLowerCase();
 }
 
-function selectRoom(el, name, initial, color) {
+function selectRoom(el, name, email, initial, color) {
   document.querySelectorAll('.chat-room-item').forEach(r=>r.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('chatAvatar').textContent=initial;
@@ -1758,8 +1787,14 @@ function selectRoom(el, name, initial, color) {
   document.getElementById('chatName').textContent=name;
   // Unsubscribe previous listener
   if(activeChatUnsub){ activeChatUnsub(); activeChatUnsub=null; }
-  activeChatRoomId = chatRoomId(currentUser?.uid, name);
-  document.getElementById('chatMessages').innerHTML='<div style="text-align:center;color:var(--text-3);padding:24px;font-size:.85rem">กำลังโหลดข้อความ...</div>';
+  const box = document.getElementById('chatMessages');
+  if(!email){
+    activeChatRoomId = null;
+    box.innerHTML='<div style="text-align:center;color:var(--text-3);padding:32px;font-size:.85rem">ยังไม่ได้ระบุอีเมลของ '+escHtml(name)+'<br>เพิ่มบันทึก CO ใหม่พร้อมอีเมล เพื่อเปิดห้องแชท</div>';
+    return;
+  }
+  activeChatRoomId = chatRoomId(currentUser?.uid, email);
+  box.innerHTML='<div style="text-align:center;color:var(--text-3);padding:24px;font-size:.85rem">กำลังโหลดข้อความ...</div>';
   subscribeChat('chatMessages', activeChatRoomId, false);
 }
 
