@@ -553,6 +553,9 @@ textarea.form-input { min-height: 80px; resize: vertical; }
         <input class="form-input" type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
       </div>
       <button class="btn-primary" id="loginBtn" onclick="doLogin()">เข้าสู่ระบบ</button>
+      <div style="text-align:center;margin-top:10px">
+        <a href="#" onclick="doResetPassword();return false;" style="font-size:.83rem;color:var(--mint-dark);text-decoration:none">ลืมรหัสผ่าน?</a>
+      </div>
       <div style="text-align:center;margin-top:14px">
         <span style="font-size:.83rem;color:var(--text-3)">ยังไม่มีบัญชี? </span>
         <button onclick="showRegister()" style="font-size:.83rem;color:var(--mint);font-weight:700;background:none;border:none;cursor:pointer">สมัครสมาชิก →</button>
@@ -1277,13 +1280,27 @@ async function doRegister(){
   }
 }
 
+async function doResetPassword(){
+  const email = (document.getElementById('loginEmail').value||'').trim();
+  if(!email){ showAuthError('กรอกอีเมลในช่องด้านบนก่อน แล้วกด "ลืมรหัสผ่าน?" อีกครั้ง'); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showAuthError('รูปแบบอีเมลไม่ถูกต้อง'); return; }
+  try {
+    await auth.sendPasswordResetEmail(email);
+    showToast('📧 ส่งลิงก์ตั้งรหัสใหม่ไปที่ ' + email + ' แล้ว (เช็คใน Spam ด้วย)');
+  } catch(e){
+    showAuthError(firebaseErrTH(e.code));
+  }
+}
+
 function firebaseErrTH(code){
   const map = {
     'auth/invalid-email':'รูปแบบอีเมลไม่ถูกต้อง',
     'auth/user-not-found':'ไม่พบบัญชีนี้ในระบบ',
-    'auth/wrong-password':'รหัสผ่านไม่ถูกต้อง',
-    'auth/invalid-credential':'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
-    'auth/email-already-in-use':'อีเมลนี้ถูกใช้แล้ว',
+    'auth/wrong-password':'รหัสผ่านไม่ถูกต้อง — กด "ลืมรหัสผ่าน?" เพื่อตั้งใหม่',
+    'auth/invalid-login-credentials':'อีเมลหรือรหัสผ่านไม่ถูกต้อง — ถ้าจำรหัสไม่ได้ กด "ลืมรหัสผ่าน?"',
+    'auth/invalid-credential':'อีเมลหรือรหัสผ่านไม่ถูกต้อง — ถ้าจำรหัสไม่ได้ กด "ลืมรหัสผ่าน?"',
+    'auth/too-many-requests':'ลองผิดหลายครั้งเกินไป รอสักครู่แล้วลองใหม่ หรือกด "ลืมรหัสผ่าน?"',
+    'auth/email-already-in-use':'อีเมลนี้เคยสมัครไว้แล้ว — ไปที่หน้า "เข้าสู่ระบบ" แล้วกด "ลืมรหัสผ่าน?" ถ้าจำรหัสไม่ได้',
     'auth/weak-password':'รหัสผ่านต้องมีอย่างน้อย 6 ตัว',
     'auth/network-request-failed':'ไม่มีการเชื่อมต่ออินเทอร์เน็ต',
   };
