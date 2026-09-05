@@ -811,12 +811,13 @@ textarea.form-input { min-height: 80px; resize: vertical; }
         <div class="card">
           <div class="section-title">บันทึกอารมณ์วันนี้</div>
           <div class="mood-row" id="moodRow">
-            <button class="mood-btn-sel" onclick="selectMood(this,1)">😢<div style="font-size:.65rem;color:var(--text-3);margin-top:4px">แย่มาก</div></button>
-            <button class="mood-btn-sel" onclick="selectMood(this,2)">😞<div style="font-size:.65rem;color:var(--text-3);margin-top:4px">แย่</div></button>
-            <button class="mood-btn-sel" onclick="selectMood(this,3)">😐<div style="font-size:.65rem;color:var(--text-3);margin-top:4px">พอไปได้</div></button>
-            <button class="mood-btn-sel" onclick="selectMood(this,4)">🙂<div style="font-size:.65rem;color:var(--text-3);margin-top:4px">ดี</div></button>
-            <button class="mood-btn-sel" onclick="selectMood(this,5)">😊<div style="font-size:.65rem;color:var(--text-3);margin-top:4px">ดีมาก</div></button>
+            <button class="mood-btn-sel" data-mood="1" onclick="selectMood(this,1)">😢<div style="font-size:.65rem;color:var(--text-3);margin-top:4px">แย่มาก</div></button>
+            <button class="mood-btn-sel" data-mood="2" onclick="selectMood(this,2)">😞<div style="font-size:.65rem;color:var(--text-3);margin-top:4px">แย่</div></button>
+            <button class="mood-btn-sel" data-mood="3" onclick="selectMood(this,3)">😐<div style="font-size:.65rem;color:var(--text-3);margin-top:4px">พอไปได้</div></button>
+            <button class="mood-btn-sel" data-mood="4" onclick="selectMood(this,4)">🙂<div style="font-size:.65rem;color:var(--text-3);margin-top:4px">ดี</div></button>
+            <button class="mood-btn-sel" data-mood="5" onclick="selectMood(this,5)">😊<div style="font-size:.65rem;color:var(--text-3);margin-top:4px">ดีมาก</div></button>
           </div>
+          <div id="moodTodayNote" style="margin-top:12px;padding:9px;background:var(--mint-light);border-radius:8px;font-size:.83rem;color:var(--mint-dark);text-align:center">บันทึกได้วันละ 1 ครั้ง</div>
         </div>
         <div class="card" style="background:linear-gradient(135deg,var(--mint-light),var(--sky-light))">
           <div class="section-title">นักจิตวิทยาของคุณ</div>
@@ -868,22 +869,22 @@ textarea.form-input { min-height: 80px; resize: vertical; }
             <div style="font-size:2.5rem;margin-bottom:12px">😔</div>
             <div style="font-weight:800;font-size:1rem;margin-bottom:4px">PHQ-9</div>
             <div style="font-size:.82rem;color:var(--text-2);margin-bottom:4px">ประเมินภาวะซึมเศร้า</div>
-            <div style="font-size:.75rem;color:var(--text-3);margin-bottom:16px">9 ข้อ · คะแนนเต็ม 27</div>
-            <button class="btn btn-mint btn-sm" style="width:100%;justify-content:center" onclick="startAssessment('PHQ9')">เริ่มทำแบบประเมิน</button>
+            <div style="font-size:.75rem;color:var(--text-3);margin-bottom:16px">9 ข้อ · คะแนนเต็ม 27 · วันละ 1 ครั้ง</div>
+            <button class="btn btn-mint btn-sm" style="width:100%;justify-content:center" data-assess="PHQ9" onclick="startAssessment('PHQ9')">เริ่มทำแบบประเมิน</button>
           </div>
           <div class="card" style="text-align:center;padding:28px 20px">
             <div style="font-size:2.5rem;margin-bottom:12px">😰</div>
             <div style="font-weight:800;font-size:1rem;margin-bottom:4px">GAD-7</div>
             <div style="font-size:.82rem;color:var(--text-2);margin-bottom:4px">ประเมินความวิตกกังวล</div>
-            <div style="font-size:.75rem;color:var(--text-3);margin-bottom:16px">7 ข้อ · คะแนนเต็ม 21</div>
-            <button class="btn btn-sm" style="width:100%;justify-content:center;background:var(--sky);color:#fff" onclick="startAssessment('GAD7')">เริ่มทำแบบประเมิน</button>
+            <div style="font-size:.75rem;color:var(--text-3);margin-bottom:16px">7 ข้อ · คะแนนเต็ม 21 · วันละ 1 ครั้ง</div>
+            <button class="btn btn-sm" style="width:100%;justify-content:center;background:var(--sky);color:#fff" data-assess="GAD7" onclick="startAssessment('GAD7')">เริ่มทำแบบประเมิน</button>
           </div>
           <div class="card" style="text-align:center;padding:28px 20px">
             <div style="font-size:2.5rem;margin-bottom:12px">🌟</div>
             <div style="font-weight:800;font-size:1rem;margin-bottom:4px">SWLS</div>
             <div style="font-size:.82rem;color:var(--text-2);margin-bottom:4px">ความพึงพอใจในชีวิต</div>
-            <div style="font-size:.75rem;color:var(--text-3);margin-bottom:16px">5 ข้อ · คะแนนเต็ม 35</div>
-            <button class="btn btn-sm" style="width:100%;justify-content:center;background:var(--amber);color:#fff" onclick="startAssessment('SWLS')">เริ่มทำแบบประเมิน</button>
+            <div style="font-size:.75rem;color:var(--text-3);margin-bottom:16px">5 ข้อ · คะแนนเต็ม 35 · วันละ 1 ครั้ง</div>
+            <button class="btn btn-sm" style="width:100%;justify-content:center;background:var(--amber);color:#fff" data-assess="SWLS" onclick="startAssessment('SWLS')">เริ่มทำแบบประเมิน</button>
           </div>
         </div>
         <div class="card">
@@ -954,13 +955,19 @@ textarea.form-input { min-height: 80px; resize: vertical; }
           <canvas id="phq9Canvas" width="400" height="140"></canvas>
         </div>
       </div>
-      <div class="card">
-        <div class="section-title">แนวโน้ม GAD-7</div>
-        <canvas id="gad7Canvas" width="800" height="120"></canvas>
-        <div style="margin-top:14px;padding:14px;background:var(--mint-light);border-radius:10px;display:flex;align-items:center;gap:10px">
-          <span style="font-size:1.5rem">✨</span>
-          <div style="font-size:.88rem;color:var(--mint-dark);line-height:1.5">คุณมีความคืบหน้าที่ดีมาก! คะแนนรวมดีขึ้น <strong>30%</strong> จากการเริ่มต้นใช้บริการ ยอดเยี่ยมมาก!</div>
+      <div class="grid-2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="section-title">แนวโน้ม GAD-7</div>
+          <canvas id="gad7Canvas" width="400" height="140"></canvas>
         </div>
+        <div class="card">
+          <div class="section-title">แนวโน้ม SWLS (ยิ่งสูงยิ่งดี)</div>
+          <canvas id="swlsCanvas" width="400" height="140"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">สรุปแนวโน้ม</div>
+        <div id="progressSummary" style="font-size:.9rem;color:var(--text-2);line-height:1.7">-</div>
       </div>
     </div>
 
@@ -1238,6 +1245,9 @@ async function doLogin(){
   const btn=document.getElementById('loginBtn');
   btn.textContent='⏳ กำลังเข้าสู่ระบบ...'; btn.disabled=true;
   try {
+    // A persisted session would otherwise let the app in without the typed
+    // password ever being checked. Drop it so this form always authenticates.
+    if(auth.currentUser) await auth.signOut().catch(()=>{});
     const cred = await auth.signInWithEmailAndPassword(email, pass);
     // role comes from Firestore user profile
     const snap = await db.collection('users').doc(cred.user.uid).get();
@@ -1393,6 +1403,7 @@ function setupApp(){
   renderDashboard();
   renderChatRooms();
   renderClientPages();
+  renderDailyLocks();
 }
 
 /* ══════════ SIDEBAR MOBILE ══════════ */
@@ -1782,6 +1793,37 @@ function renderClientPages(){
   set('progressMoodAvg', avgMood);
   set('progressAssessCount', assessHistory.length);
   set('progressLastDate', assessHistory.length ? assessHistory[0].date : '-');
+  renderProgressSummary();
+}
+
+// States only what the recorded data supports - no invented percentages.
+function renderProgressSummary(){
+  const el = document.getElementById('progressSummary');
+  if(!el) return;
+  const lines = [];
+  // Lower is better for PHQ-9 / GAD-7; higher is better for SWLS.
+  [['PHQ-9','ภาวะซึมเศร้า',false],['GAD-7','ความวิตกกังวล',false],['SWLS','ความพึงพอใจในชีวิต',true]]
+    .forEach(([type,label,higherBetter])=>{
+      const rows = assessHistory.filter(a=>a.type===type);
+      if(rows.length===0) return;
+      if(rows.length===1){
+        lines.push('• <strong>'+type+'</strong> ('+label+'): ทำแล้ว 1 ครั้ง ได้ '+rows[0].score+' คะแนน — ทำอีกครั้งเพื่อดูแนวโน้ม');
+        return;
+      }
+      const latest = rows[0].score, first = rows[rows.length-1].score;
+      const diff = latest - first;
+      const better = higherBetter ? diff > 0 : diff < 0;
+      const word = diff === 0 ? 'เท่าเดิม' : (better ? 'ดีขึ้น' : 'แย่ลง');
+      const col = diff === 0 ? 'var(--text-2)' : (better ? 'var(--green-ok)' : 'var(--coral)');
+      lines.push('• <strong>'+type+'</strong> ('+label+'): '+first+' → '+latest+' คะแนน '
+        +'<span style="color:'+col+';font-weight:700">'+word+(diff?' '+Math.abs(diff)+' คะแนน':'')+'</span>'
+        +' <span style="color:var(--text-3)">(จาก '+rows.length+' ครั้ง)</span>');
+    });
+  const moods = lsLoad('moods',[]);
+  if(moods.length) lines.push('• <strong>อารมณ์</strong>: บันทึกแล้ว '+moods.length+' วัน');
+  el.innerHTML = lines.length
+    ? lines.join('<br>')
+    : '<span style="color:var(--text-3)">ยังไม่มีข้อมูลพอที่จะสรุปแนวโน้ม — เริ่มจากบันทึกอารมณ์และทำแบบประเมินดูครับ</span>';
 }
 
 /* ══════════ CHAT ══════════ */
@@ -1948,9 +1990,15 @@ function renderAssessHistory(){
     tbody.innerHTML=assessHistory.map(h=>`<tr><td>${h.type}</td><td style="font-family:'Inter',sans-serif;font-weight:700">${h.score}/${h.max}</td><td><span style="font-weight:700;color:${colors[h.severity]||'var(--text)'}">${h.severity}</span></td><td style="color:var(--text-3)">${h.date}</td></tr>`).join('');
   }
   renderClientPages();
+  renderDailyLocks();
   drawCharts();
 }
 function startAssessment(type){
+  if(assessDoneToday(type)){
+    const label = ASSESS_LABEL[type]||type;
+    showToast('📋 วันนี้ทำ '+label+' ไปแล้ว — ทำได้วันละ 1 ครั้ง กลับมาใหม่พรุ่งนี้นะครับ', false);
+    return;
+  }
   assessType=type;
   assessAnswers=new Array(ASSESSMENTS[type].questions.length).fill(-1);
   assessCurrent=0;
@@ -1985,7 +2033,7 @@ function cancelAssessment(){document.getElementById('assessFlow').style.display=
 async function showAssessResult(){
   const a=ASSESSMENTS[assessType];
   const r=a.score(assessAnswers);
-  const newAssess = {type:assessType==='PHQ9'?'PHQ-9':assessType==='GAD7'?'GAD-7':'SWLS',score:r.s,max:a.max,severity:r.sev,date:new Date().toLocaleDateString('th-TH'),_ts:Date.now()};
+  const newAssess = {type:assessType==='PHQ9'?'PHQ-9':assessType==='GAD7'?'GAD-7':'SWLS',score:r.s,max:a.max,severity:r.sev,date:new Date().toLocaleDateString('th-TH'),_ts:Date.now(),dayKey:dayKey()};
   assessHistory.unshift(newAssess);
   if(currentUser?.uid && !currentUser.uid.startsWith('demo-')){
     // Save to localStorage immediately
@@ -2014,26 +2062,85 @@ async function showAssessResult(){
 
 /* ══════════ MOOD ══════════ */
 async function selectMood(btn, val){
+  const already = moodToday();
+  if(already){
+    showToast('😊 วันนี้บันทึกอารมณ์ไปแล้ว — บันทึกได้วันละ 1 ครั้ง', false);
+    return;
+  }
+  const LABELS = {1:'แย่มาก 😢',2:'แย่ 😞',3:'พอไปได้ 😐',4:'ดี 🙂',5:'ดีมาก 😊'};
+  if(!confirm('ยืนยันบันทึกอารมณ์ของวันนี้เป็น "'+LABELS[val]+'" ?\n\nบันทึกได้วันละ 1 ครั้ง และแก้ไขภายหลังไม่ได้')) return;
   document.querySelectorAll('.mood-btn-sel').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   const note = document.getElementById('moodNote')?.value||'';
-  let msg = '✅ บันทึกอารมณ์เรียบร้อย!';
   if(currentUser?.uid && !currentUser.uid.startsWith('demo-')){
-    // Save to localStorage immediately
     const moods = lsLoad('moods',[]);
-    moods.unshift({mood:val, note, recordedAt:new Date().toISOString()});
+    moods.unshift({mood:val, note, recordedAt:new Date().toISOString(), dayKey:dayKey()});
     lsSave('moods', moods);
-    msg = '✅ บันทึกอารมณ์สำเร็จ!';
-    // Sync to Firestore in background
-    db.collection('moods').add({ userId:currentUser.uid, mood:val, note, recordedAt:firebase.firestore.FieldValue.serverTimestamp() }).catch(e=>console.warn('Firestore mood sync:',e.message));
+    showToast('✅ บันทึกอารมณ์ของวันนี้แล้ว');
+    db.collection('moods').add({ userId:currentUser.uid, mood:val, note, dayKey:dayKey(), recordedAt:firebase.firestore.FieldValue.serverTimestamp() }).catch(e=>console.warn('Firestore mood sync:',e.message));
+  } else {
+    showToast('🚀 โหมดทดลอง — ไม่บันทึกจริง', false);
   }
-  setTimeout(()=>{
-    const prev=btn.parentElement.nextElementSibling;
-    if(prev&&prev.id==='moodResult')prev.remove();
-    const div=document.createElement('div');div.id='moodResult';
-    div.style.cssText='margin-top:12px;padding:10px;background:var(--mint-light);border-radius:8px;font-size:.88rem;color:var(--mint-dark);text-align:center';
-    div.textContent=msg;btn.parentElement.insertAdjacentElement('afterend',div);
-  },300);
+  renderDailyLocks();
+  renderClientPages();
+  drawCharts();
+}
+
+/* ══════════ DAILY LIMITS ══════════ */
+// Local-time day key, so "one per day" follows the user's calendar day.
+function dayKey(d){
+  const x = d ? new Date(d) : new Date();
+  if(isNaN(x)) return '';
+  return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+}
+function thaiDate(d){
+  const x = d ? new Date(d) : new Date();
+  return isNaN(x) ? '-' : x.toLocaleDateString('th-TH',{day:'numeric',month:'short'});
+}
+const ASSESS_LABEL = {PHQ9:'PHQ-9', GAD7:'GAD-7', SWLS:'SWLS'};
+// Records store the display label, so compare on that.
+function assessDoneToday(type){
+  const label = ASSESS_LABEL[type] || type;
+  const today = dayKey();
+  return assessHistory.some(a => a.type===label && (a.dayKey || dayKey(a._ts)) === today);
+}
+function moodToday(){
+  const today = dayKey();
+  return lsLoad('moods',[]).find(m => (m.dayKey || dayKey(m.recordedAt)) === today) || null;
+}
+
+// Reflect today's state on the assessment cards and the mood row.
+function renderDailyLocks(){
+  document.querySelectorAll('[data-assess]').forEach(btn=>{
+    const type = btn.getAttribute('data-assess');
+    const done = assessDoneToday(type);
+    btn.disabled = done;
+    btn.style.opacity = done ? '.5' : '';
+    btn.style.cursor = done ? 'not-allowed' : 'pointer';
+    btn.textContent = done ? '✓ ทำแล้ววันนี้' : 'เริ่มทำแบบประเมิน';
+  });
+  const done = moodToday();
+  const row = document.getElementById('moodRow');
+  if(row){
+    row.querySelectorAll('.mood-btn-sel').forEach(b=>{
+      const v = parseInt(b.getAttribute('data-mood'));
+      const isPick = done && v===parseInt(done.mood);
+      b.classList.toggle('active', !!isPick);
+      b.style.opacity = done && !isPick ? '.35' : '';
+      b.style.cursor = done ? 'not-allowed' : 'pointer';
+    });
+  }
+  const note = document.getElementById('moodTodayNote');
+  if(note){
+    if(done){
+      const emo = ['','😢','😞','😐','🙂','😊'][parseInt(done.mood)]||'';
+      note.innerHTML = '✅ บันทึกอารมณ์ของวันนี้แล้ว '+emo+' <span style="color:var(--text-3)">· บันทึกได้วันละ 1 ครั้ง</span>';
+      note.style.display='block';
+    } else {
+      note.innerHTML = 'บันทึกได้วันละ 1 ครั้ง';
+      note.style.display='block';
+    }
+  }
 }
 
 /* ══════════ MODAL ══════════ */
@@ -2046,6 +2153,7 @@ function drawCharts(){
   drawMoodChart();
   drawPHQ9Chart();
   drawGAD7Chart();
+  drawSWLSChart();
 }
 
 function drawMoodChart(){
@@ -2053,15 +2161,21 @@ function drawMoodChart(){
   c.width=c.parentElement.clientWidth-40||380;
   const ctx=c.getContext('2d');
   const w=c.width,h=c.height;
-  // Use real mood data from localStorage
-  const moodData = lsLoad('moods',[]).slice(0,14).reverse();
-  const moodVals = moodData.length > 0 ? moodData.map(m=>parseInt(m.mood)||3) : [3,3,3,3,3,3,3];
-  const moodColors=['','#E07B6A','#F0A070','#E6A94A','#7DC080','#3DAA7D'];
   ctx.clearRect(0,0,w,h);
-  const padL=8,padR=8,padT=10,padB=28;
-  const bw=(w-padL-padR)/moodVals.length-3;
+  const moodData = lsLoad('moods',[]).slice(0,14).reverse();
+  if(moodData.length===0){
+    ctx.fillStyle='#aaa';ctx.font='13px sans-serif';ctx.textAlign='center';
+    ctx.fillText('ยังไม่มีบันทึกอารมณ์ — บันทึกที่หน้าหลัก',w/2,h/2);
+    return;
+  }
+  const moodColors=['','#E07B6A','#F0A070','#E6A94A','#7DC080','#3DAA7D'];
+  const padL=8,padR=8,padT=10,padB=30;
+  const bw=(w-padL-padR)/moodData.length-3;
   const ch=h-padT-padB;
-  moodVals.forEach((m,i)=>{
+  // Crowded axes drop every other label rather than overlapping.
+  const step = moodData.length>9 ? 2 : 1;
+  moodData.forEach((rec,i)=>{
+    const m=parseInt(rec.mood)||3;
     const bh=(m/5)*ch;
     const x=padL+i*(bw+3);
     const y=padT+ch-bh;
@@ -2070,10 +2184,12 @@ function drawMoodChart(){
     ctx.beginPath();ctx.roundRect(x,y,bw,bh,4);ctx.fill();
     ctx.fillStyle=col;
     ctx.beginPath();ctx.roundRect(x,y,bw,Math.min(bh,6),4);ctx.fill();
-    ctx.fillStyle='#888';
-    ctx.font='9px Inter,sans-serif';ctx.textAlign='center';
-    const day=moodData[i]?new Date(moodData[i].recordedAt).getDate():i+1;
-    ctx.fillText(day,x+bw/2,h-6);
+    if(i%step===0 || i===moodData.length-1){
+      const d=new Date(rec.recordedAt);
+      ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--text-3')||'#8AADA4';
+      ctx.font='8.5px Inter,sans-serif';ctx.textAlign='center';
+      ctx.fillText(isNaN(d)?'-':(d.getDate()+'/'+(d.getMonth()+1)),x+bw/2,h-8);
+    }
   });
 }
 
@@ -2100,6 +2216,21 @@ function drawGAD7Chart(){
   const labels = gad.length > 0 ? gad.map(a=>a.date||'') : [];
   if(data.length < 2){ ctx.clearRect(0,0,w,h); ctx.fillStyle='#aaa'; ctx.font='13px sans-serif'; ctx.textAlign='center'; ctx.fillText('ทำแบบประเมิน GAD-7 อย่างน้อย 2 ครั้ง เพื่อดูแนวโน้ม',w/2,h/2); return; }
   drawLineChart(ctx,w,h,data,21,'#6BAED6',labels);
+}
+
+function drawSWLSChart(){
+  const c=document.getElementById('swlsCanvas');if(!c)return;
+  c.width=c.parentElement.clientWidth-40||380;
+  const ctx=c.getContext('2d');
+  const w=c.width,h=c.height;
+  const sw = assessHistory.filter(a=>a.type==='SWLS').slice(0,6).reverse();
+  const data = sw.length > 1 ? sw.map(a=>a.score) : [];
+  const labels = sw.map(a=>a.date||'');
+  if(data.length < 2){
+    ctx.clearRect(0,0,w,h); ctx.fillStyle='#aaa'; ctx.font='13px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('ทำแบบประเมิน SWLS อย่างน้อย 2 ครั้ง เพื่อดูแนวโน้ม',w/2,h/2); return;
+  }
+  drawLineChart(ctx,w,h,data,35,'#E6A94A',labels);
 }
 
 function drawLineChart(ctx,w,h,data,max,col,labels){
