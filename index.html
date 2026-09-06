@@ -863,6 +863,7 @@ textarea.form-input { min-height: 80px; resize: vertical; }
     <!-- ── Assessments ── -->
     <div class="page" id="page-assessments">
       <div class="page-header"><h2>📊 แบบประเมิน</h2><p>ประเมินสุขภาพจิตของคุณ</p></div>
+      <div class="share-notice" style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--sky-light);border-radius:10px;margin-bottom:18px;font-size:.84rem;line-height:1.6;color:var(--text-2)"><span style="font-size:1.05rem;line-height:1.3">🔒</span><div class="share-notice-text">-</div></div>
       <div id="assessList">
         <div class="grid-3" style="margin-bottom:24px">
           <div class="card" style="text-align:center;padding:28px 20px">
@@ -940,6 +941,7 @@ textarea.form-input { min-height: 80px; resize: vertical; }
     <!-- ── Progress ── -->
     <div class="page" id="page-progress">
       <div class="page-header"><h2>📈 ความคืบหน้า</h2><p>ติดตามสุขภาพจิตของคุณ</p></div>
+      <div class="share-notice" style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--sky-light);border-radius:10px;margin-bottom:18px;font-size:.84rem;line-height:1.6;color:var(--text-2)"><span style="font-size:1.05rem;line-height:1.3">🔒</span><div class="share-notice-text">-</div></div>
       <div class="grid-3" style="margin-bottom:20px">
         <div class="stat-card accent-mint"><div class="stat-icon">😊</div><div class="stat-value" id="progressMoodAvg">-</div><div class="stat-label">อารมณ์เฉลี่ย (1=แย่, 5=ดี)</div></div>
         <div class="stat-card accent-sky"><div class="stat-icon">📊</div><div class="stat-value" id="progressAssessCount">0</div><div class="stat-label">ครั้งที่ประเมินแล้ว</div></div>
@@ -1869,6 +1871,7 @@ function renderClientPages(){
           subscribeChat('chatMessagesClient', activeChatRoomId, true);
         }
         backfillCounselorOnRecords(l.counselorId, myEmail);
+        renderClientPages(); // refresh the sharing notice now that the counselor is known
       }).catch(e=>console.warn('clientLink lookup:', e.message));
   }
 
@@ -1882,6 +1885,14 @@ function renderClientPages(){
   const gadEl = document.getElementById('latestGAD7'), gadSev = document.getElementById('latestGAD7Sev');
   if(gadEl){ gadEl.textContent=gad7?gad7.score:'-'; gadEl.style.color=gad7?sevColor(gad7.severity):'var(--text-3)'; }
   if(gadSev){ gadSev.textContent=gad7?gad7.severity:'ยังไม่มีข้อมูล'; gadSev.style.color=gad7?sevColor(gad7.severity):'var(--text-3)'; }
+
+  // Be explicit about who can see these records.
+  const shareTxt = cachedCo?.uid
+    ? 'ผลแบบประเมินและบันทึกอารมณ์ของคุณ <strong>'+escHtml(coName)+'</strong> (นักจิตวิทยาของคุณ) มองเห็นได้ '
+      + 'เพื่อใช้ติดตามและดูแลคุณ — ไม่มีผู้ใช้คนอื่นเห็นข้อมูลนี้ และนักจิตวิทยาแก้ไขคะแนนของคุณไม่ได้'
+    : 'ตอนนี้ยังไม่มีนักจิตวิทยาผูกกับบัญชีของคุณ ข้อมูลของคุณจึงเห็นได้เฉพาะตัวคุณเอง '
+      + '<span style="color:var(--text-3)">เมื่อนักจิตวิทยาเพิ่มคุณเข้าระบบแล้ว ผลประเมินและบันทึกอารมณ์จะถูกแชร์ให้ท่านนั้นเห็น</span>';
+  document.querySelectorAll('.share-notice-text').forEach(el=>{ el.innerHTML = shareTxt; });
 
   // Progress stats
   const moodVals = moods.slice(0,14).map(m=>parseInt(m.mood)||0).filter(v=>v>0);
