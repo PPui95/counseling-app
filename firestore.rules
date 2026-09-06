@@ -81,8 +81,12 @@ service cloud.firestore {
     }
 
     // ── assessments: ผลแบบประเมิน PHQ-9 / GAD-7 / SWLS ───────
+    // เจ้าของข้อมูลอ่านได้เสมอ และนักจิตวิทยาที่ผู้รับบริการผูกไว้
+    // (counselorId ที่ฝั่งผู้รับบริการเขียนลงไปเอง) อ่านได้ เพื่อติดตามอาการ
+    // เขียนได้เฉพาะเจ้าของข้อมูลเท่านั้น — CO แก้ผลประเมินไม่ได้
     match /assessments/{assessmentId} {
-      allow read: if signedIn() && resource.data.userId == myUid();
+      allow read: if signedIn()
+                  && (resource.data.userId == myUid() || resource.data.counselorId == myUid());
       allow create: if signedIn() && request.resource.data.userId == myUid();
       allow update: if signedIn()
                     && resource.data.userId == myUid()
@@ -91,8 +95,10 @@ service cloud.firestore {
     }
 
     // ── moods: บันทึกอารมณ์ประจำวัน ──────────────────────────
+    // เงื่อนไขเดียวกับ assessments
     match /moods/{moodId} {
-      allow read: if signedIn() && resource.data.userId == myUid();
+      allow read: if signedIn()
+                  && (resource.data.userId == myUid() || resource.data.counselorId == myUid());
       allow create: if signedIn() && request.resource.data.userId == myUid();
       allow update: if signedIn()
                     && resource.data.userId == myUid()

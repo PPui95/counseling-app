@@ -1597,7 +1597,7 @@ function renderClients(){
   grid.innerHTML = clients.map((c,i)=>{
     const col = colors[i%colors.length];
     const init = c.name.charAt(0);
-    return `<div class="card" style="cursor:pointer" onclick="showClientDetail('${c.name}','${init}','${col}',${c.count},'','','','')">
+    return `<div class="card" style="cursor:pointer" onclick="showClientDetail('${c.name.replace(/'/g,"\\'")}')">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
         <div class="user-avatar" style="width:48px;height:48px;font-size:1.1rem;background:${col}">${init}</div>
         <div style="flex:1">
@@ -1609,29 +1609,124 @@ function renderClients(){
   }).join('');
 }
 
-function showClientDetail(name,initial,color,sessions,phq9sev,gad7score,gad7sev,note){
-  document.getElementById('clientModalName').textContent=name;
-  document.getElementById('clientModalBody').innerHTML=`
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
-      <div class="user-avatar" style="width:56px;height:56px;font-size:1.4rem;background:${color}">${initial}</div>
-      <div><div style="font-weight:700;font-size:1rem">${name}</div><div style="font-size:.82rem;color:var(--text-2)">${sessions} เซสชัน</div></div>
+// Shows the client's REAL recorded scores. Previously this invented a PHQ-9
+// value from the session count, which is unsafe to put in front of a clinician.
+let coDetailCharts = null;
+
+async function showClientDetail(name){
+  const rows = sessions.filter(x=>(x.client||x.clientName)===name);
+  const email = (rows.find(x=>x.clientEmail)?.clientEmail||'').trim().toLowerCase();
+  const count = rows.length;
+  const initial = name.charAt(0);
+  document.getElementById('clientModalName').textContent = name;
+  document.getElementById('clientModalBody').innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+      <div class="user-avatar" style="width:56px;height:56px;font-size:1.4rem;background:var(--mint)">${escHtml(initial)}</div>
+      <div><div style="font-weight:700;font-size:1rem">${escHtml(name)}</div>
+        <div style="font-size:.82rem;color:var(--text-2)">${count} เซสชัน${email?' · '+escHtml(email):''}</div></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
-      <div style="background:var(--surface-alt);border-radius:10px;padding:14px;text-align:center">
-        <div style="font-size:.75rem;color:var(--text-3);margin-bottom:4px">PHQ-9</div>
-        <div style="font-size:1.6rem;font-weight:800">${sessions<=3?12:8}</div>
-        <div style="font-size:.8rem;color:var(--text-2)">${phq9sev}</div>
-      </div>
-      <div style="background:var(--surface-alt);border-radius:10px;padding:14px;text-align:center">
-        <div style="font-size:.75rem;color:var(--text-3);margin-bottom:4px">GAD-7</div>
-        <div style="font-size:1.6rem;font-weight:800">${gad7score}</div>
-        <div style="font-size:.8rem;color:var(--text-2)">${gad7sev}</div>
-      </div>
-    </div>
-    <div style="padding:14px;background:var(--mint-light);border-radius:10px;font-size:.88rem;color:var(--mint-dark)">${note}</div>
+    <div id="coDetailBody" style="color:var(--text-3);font-size:.88rem;text-align:center;padding:24px">กำลังโหลดข้อมูล...</div>
     <button class="btn btn-mint" style="width:100%;justify-content:center;margin-top:16px" onclick="closeModal('clientModal');showPage('chat-c')">💬 แชทกับผู้รับบริการ</button>
   `;
   openModal('clientModal');
+
+  const body = document.getElementById('coDetailBody');
+  if(!email){
+    body.innerHTML = '<div style="padding:8px">ยังไม่ได้ระบุอีเมลของ '+escHtml(name)+'<br>'
+      +'<span style="color:var(--text-3);font-size:.82rem">ต้องมีอีเมลจึงจะดึงผลประเมินและอารมณ์ของผู้รับบริการมาแสดงได้</span></div>';
+    return;
+  }
+  if(!currentUser?.uid || currentUser.uid.startsWith('demo-')){
+    body.innerHTML = '<div style="padding:8px;color:var(--text-3)">โหมดทดลอง — ไม่มีข้อมูลจริง</div>';
+    return;
+  }
+
+  let assess = [], moods = [];
+  try {
+    const [aSnap, mSnap] = await Promise.all([
+      db.collection('assessments').where('counselorId','==',currentUser.uid).where('userEmail','==',email).get(),
+      db.collection('moods').where('counselorId','==',currentUser.uid).where('userEmail','==',email).get()
+    ]);
+    assess = aSnap.docs.map(d=>{ const v=d.data(); return {
+      type: v.type==='PHQ9'?'PHQ-9':v.type==='GAD7'?'GAD-7':v.type==='SWLS'?'SWLS':v.type,
+      score: v.score, severity: v.severity,
+      _ts: v.takenAt?.toMillis?.() || 0,
+      date: v.takenAt?.toDate?.().toLocaleDateString('th-TH') || '-'
+    };});
+    assess.sort((a,b)=>b._ts-a._ts);
+    moods = mSnap.docs.map(d=>{ const v=d.data(); return {
+      mood: v.mood, _ts: v.recordedAt?.toMillis?.() || 0,
+      recordedAt: v.recordedAt?.toDate?.()?.toISOString() || null
+    };});
+    moods.sort((a,b)=>b._ts-a._ts);
+  } catch(e){
+    body.innerHTML = '<div style="padding:8px;color:var(--coral)">โหลดข้อมูลไม่สำเร็จ: '+escHtml(e.message)+'<br>'
+      +'<span style="font-size:.8rem;color:var(--text-3)">ถ้าขึ้นว่าไม่มีสิทธิ์ ให้ publish Firestore Rules ชุดล่าสุดก่อน</span></div>';
+    return;
+  }
+
+  if(assess.length===0 && moods.length===0){
+    body.innerHTML = '<div style="padding:8px;color:var(--text-3)">'+escHtml(name)+' ยังไม่ได้บันทึกอารมณ์หรือทำแบบประเมิน</div>';
+    return;
+  }
+
+  const latest = t => assess.find(a=>a.type===t);
+  const card = (t,label,col) => {
+    const l = latest(t);
+    return `<div style="background:var(--surface-alt);border-radius:10px;padding:14px;text-align:center">
+      <div style="font-size:.75rem;color:var(--text-3);margin-bottom:4px">${t}</div>
+      <div style="font-size:1.6rem;font-weight:800;color:${l?col:'var(--text-3)'}">${l?l.score:'-'}</div>
+      <div style="font-size:.78rem;color:var(--text-2)">${l?escHtml(l.severity||''):'ยังไม่ได้ทำ'}</div>
+      <div style="font-size:.7rem;color:var(--text-3);margin-top:2px">${l?escHtml(l.date):''}</div>
+    </div>`;
+  };
+  const moodVals = moods.slice(0,14).map(m=>parseInt(m.mood)||0).filter(v=>v>0);
+  const moodAvg = moodVals.length ? (moodVals.reduce((a,b)=>a+b,0)/moodVals.length).toFixed(1) : '-';
+
+  body.style.color=''; body.style.textAlign=''; body.style.padding='';
+  body.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px">
+      ${card('PHQ-9','ซึมเศร้า','var(--mint-dark)')}
+      ${card('GAD-7','วิตกกังวล','var(--sky)')}
+      ${card('SWLS','พึงพอใจ','var(--amber)')}
+    </div>
+    <div style="background:var(--surface-alt);border-radius:10px;padding:12px;text-align:center;margin-bottom:16px">
+      <span style="font-size:.8rem;color:var(--text-3)">อารมณ์เฉลี่ย 14 วันล่าสุด</span>
+      <span style="font-size:1.1rem;font-weight:800;margin-left:8px">${moodAvg}</span>
+      <span style="font-size:.78rem;color:var(--text-3)">/ 5 · บันทึก ${moods.length} วัน</span>
+    </div>
+    <div style="font-weight:700;font-size:.85rem;margin-bottom:6px">อารมณ์ 14 วันที่ผ่านมา</div>
+    <canvas id="coMoodCanvas" width="400" height="130" style="margin-bottom:14px"></canvas>
+    <div style="font-weight:700;font-size:.85rem;margin-bottom:6px">แนวโน้ม PHQ-9</div>
+    <canvas id="coPhq9Canvas" width="400" height="130" style="margin-bottom:14px"></canvas>
+    <div style="font-weight:700;font-size:.85rem;margin-bottom:6px">แนวโน้ม GAD-7</div>
+    <canvas id="coGad7Canvas" width="400" height="130" style="margin-bottom:14px"></canvas>
+    <div style="font-weight:700;font-size:.85rem;margin-bottom:6px">แนวโน้ม SWLS (ยิ่งสูงยิ่งดี)</div>
+    <canvas id="coSwlsCanvas" width="400" height="130"></canvas>
+  `;
+  coDetailCharts = { assess, moods };
+  drawClientDetailCharts();
+}
+
+function drawClientDetailCharts(){
+  if(!coDetailCharts) return;
+  const { assess, moods } = coDetailCharts;
+  drawMoodBars(document.getElementById('coMoodCanvas'), moods.slice(0,14).reverse());
+  [['coPhq9Canvas','PHQ-9',27,'#3DAA7D'],
+   ['coGad7Canvas','GAD-7',21,'#6BAED6'],
+   ['coSwlsCanvas','SWLS',35,'#E6A94A']].forEach(([id,type,max,col])=>{
+    const c=document.getElementById(id); if(!c) return;
+    c.width=c.parentElement.clientWidth-8||360;
+    const ctx=c.getContext('2d'), w=c.width, h=c.height;
+    const rows=assess.filter(a=>a.type===type).slice(0,6).reverse();
+    ctx.clearRect(0,0,w,h);
+    if(rows.length<2){
+      ctx.fillStyle='#aaa';ctx.font='12px sans-serif';ctx.textAlign='center';
+      ctx.fillText(rows.length===1?('ทำ '+type+' แล้ว 1 ครั้ง ('+rows[0].score+' คะแนน) — ต้อง 2 ครั้งขึ้นไปจึงเห็นแนวโน้ม'):('ยังไม่ได้ทำ '+type),w/2,h/2);
+      return;
+    }
+    drawLineChart(ctx,w,h,rows.map(a=>a.score),max,col,rows.map(a=>a.date||''));
+  });
 }
 
 /* ══════════ DASHBOARD (Counselor) ══════════ */
@@ -1773,6 +1868,7 @@ function renderClientPages(){
           activeChatRoomId = chatRoomId(l.counselorId, myEmail);
           subscribeChat('chatMessagesClient', activeChatRoomId, true);
         }
+        backfillCounselorOnRecords(l.counselorId, myEmail);
       }).catch(e=>console.warn('clientLink lookup:', e.message));
   }
 
@@ -1824,6 +1920,25 @@ function renderProgressSummary(){
   el.innerHTML = lines.length
     ? lines.join('<br>')
     : '<span style="color:var(--text-3)">ยังไม่มีข้อมูลพอที่จะสรุปแนวโน้ม — เริ่มจากบันทึกอารมณ์และทำแบบประเมินดูครับ</span>';
+}
+
+// Records written before the counselor link existed carry no counselorId,
+// so the counselor could not read them. Stamp them once the link resolves.
+async function backfillCounselorOnRecords(coUid, email){
+  if(!coUid || !currentUser?.uid) return;
+  for(const coll of ['assessments','moods']){
+    try {
+      const snap = await db.collection(coll).where('userId','==',currentUser.uid).get();
+      const stale = snap.docs.filter(d=>{
+        const v=d.data();
+        return v.counselorId !== coUid || !v.userEmail;
+      });
+      if(!stale.length) continue;
+      const batch = db.batch();
+      stale.slice(0,400).forEach(d=>batch.update(d.ref,{counselorId:coUid, userEmail:email}));
+      await batch.commit();
+    } catch(e){ console.warn('backfill '+coll+':', e.message); }
+  }
 }
 
 /* ══════════ CHAT ══════════ */
@@ -2041,8 +2156,9 @@ async function showAssessResult(){
     showToast('📊 บันทึกผลประเมินสำเร็จ!');
     // Sync to Firestore in background
     db.collection('assessments').add({
-      userId:currentUser.uid, type:assessType, answers:assessAnswers,
-      score:r.s, severity:r.sev, interpretation:r.note,
+      userId:currentUser.uid, userEmail:myEmailLower(), counselorId:myCounselorId(),
+      type:assessType, answers:assessAnswers,
+      score:r.s, severity:r.sev, interpretation:r.note, dayKey:dayKey(),
       takenAt:firebase.firestore.FieldValue.serverTimestamp()
     }).catch(e=>console.warn('Firestore assessment sync:', e.message));
   }
@@ -2077,7 +2193,7 @@ async function selectMood(btn, val){
     moods.unshift({mood:val, note, recordedAt:new Date().toISOString(), dayKey:dayKey()});
     lsSave('moods', moods);
     showToast('✅ บันทึกอารมณ์ของวันนี้แล้ว');
-    db.collection('moods').add({ userId:currentUser.uid, mood:val, note, dayKey:dayKey(), recordedAt:firebase.firestore.FieldValue.serverTimestamp() }).catch(e=>console.warn('Firestore mood sync:',e.message));
+    db.collection('moods').add({ userId:currentUser.uid, userEmail:myEmailLower(), counselorId:myCounselorId(), mood:val, note, dayKey:dayKey(), recordedAt:firebase.firestore.FieldValue.serverTimestamp() }).catch(e=>console.warn('Firestore mood sync:',e.message));
   } else {
     showToast('🚀 โหมดทดลอง — ไม่บันทึกจริง', false);
   }
@@ -2098,6 +2214,9 @@ function thaiDate(d){
   return isNaN(x) ? '-' : x.toLocaleDateString('th-TH',{day:'numeric',month:'short'});
 }
 const ASSESS_LABEL = {PHQ9:'PHQ-9', GAD7:'GAD-7', SWLS:'SWLS'};
+// Stamped onto the client's own records so their counselor may read them.
+function myCounselorId(){ return (lsLoad('myCounselor',null)||{}).uid || null; }
+function myEmailLower(){ return (currentUser?.email||'').trim().toLowerCase(); }
 // Records store the display label, so compare on that.
 function assessDoneToday(type){
   const label = ASSESS_LABEL[type] || type;
@@ -2157,12 +2276,15 @@ function drawCharts(){
 }
 
 function drawMoodChart(){
-  const c=document.getElementById('moodCanvas');if(!c)return;
+  drawMoodBars(document.getElementById('moodCanvas'), lsLoad('moods',[]).slice(0,14).reverse());
+}
+
+function drawMoodBars(c, moodData){
+  if(!c)return;
   c.width=c.parentElement.clientWidth-40||380;
   const ctx=c.getContext('2d');
   const w=c.width,h=c.height;
   ctx.clearRect(0,0,w,h);
-  const moodData = lsLoad('moods',[]).slice(0,14).reverse();
   if(moodData.length===0){
     ctx.fillStyle='#aaa';ctx.font='13px sans-serif';ctx.textAlign='center';
     ctx.fillText('ยังไม่มีบันทึกอารมณ์ — บันทึกที่หน้าหลัก',w/2,h/2);
