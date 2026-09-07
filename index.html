@@ -1358,6 +1358,7 @@ function firebaseErrTH(code){
 
 async function doLogout(){
   if(chatUnsubscribe){ chatUnsubscribe(); chatUnsubscribe=null; }
+  resetChatState();
   await auth.signOut().catch(()=>{});
   try{ localStorage.removeItem('jitjai_user'); }catch(e){}
   currentUser=null; sessions=[]; assessHistory=[];
@@ -1366,7 +1367,18 @@ async function doLogout(){
   showLogin();
 }
 
+// activeChatRoomId / activeChatUnsub are module-level. Signing in as a second
+// account in the same tab used to keep the previous user's room, so the app
+// listened on a room whose email was someone else's and the rules refused it.
+function resetChatState(){
+  if(activeChatUnsub){ try{ activeChatUnsub(); }catch(e){} }
+  activeChatUnsub = null;
+  activeChatRoomId = null;
+  pendingRoomClient = null;
+}
+
 function enterApp(){
+  resetChatState();
   // Clear demo data
   if(!currentUser?.uid?.startsWith('demo-')){ sessions=[]; assessHistory=[]; }
   document.getElementById('screen-login').classList.remove('active');
@@ -1918,13 +1930,17 @@ function renderClientPages(){
   const chatCav = document.getElementById('clChatCounselorAvatar'); if(chatCav) chatCav.textContent=cachedCo?cachedCo.displayName.charAt(0):'🩺';
   const chatCname = document.getElementById('clChatCounselorName'); if(chatCname) chatCname.textContent=coName;
   const myEmail = myEmailLower();
-  // Set up client chat room if we already know the counselor
-  if(cachedCo?.uid && myEmail && !activeChatRoomId){
-    activeChatRoomId = chatRoomId(cachedCo.uid, myEmail);
-    subscribeChat('chatMessagesClient', activeChatRoomId, true);
-    // Records written before this counselor was linked carry no counselorId and
-    // stay invisible to them. This used to run only on the very first resolve.
-    backfillCounselorOnRecords(cachedCo.uid, myEmail);
+  // Re-derive the room every time and switch if it does not match. Checking
+  // only for a missing room let a stale one from a previous account survive.
+  if(cachedCo?.uid && myEmail){
+    const wantRoom = chatRoomId(cachedCo.uid, myEmail);
+    if(activeChatRoomId !== wantRoom){
+      activeChatRoomId = wantRoom;
+      subscribeChat('chatMessagesClient', activeChatRoomId, true);
+      // Records written before this counselor was linked carry no counselorId
+      // and stay invisible to them.
+      backfillCounselorOnRecords(cachedCo.uid, myEmail);
+    }
   }
   // Resolve counselor from the link doc the counselor published (readable only by this client)
   if(!cachedCo && myEmail){
@@ -1939,8 +1955,9 @@ function renderClientPages(){
         set('clChatCounselorName', coProfile.displayName);
         const a=document.getElementById('clCounselorAvatar'); if(a) a.textContent=coProfile.displayName.charAt(0);
         const b=document.getElementById('clChatCounselorAvatar'); if(b) b.textContent=coProfile.displayName.charAt(0);
-        if(!activeChatRoomId){
-          activeChatRoomId = chatRoomId(l.counselorId, myEmail);
+        const wantRoom = chatRoomId(l.counselorId, myEmail);
+        if(activeChatRoomId !== wantRoom){
+          activeChatRoomId = wantRoom;
           subscribeChat('chatMessagesClient', activeChatRoomId, true);
         }
         backfillCounselorOnRecords(l.counselorId, myEmail);
@@ -2085,7 +2102,7 @@ function selectRoom(el, name, email, initial, color) {
   document.getElementById('chatAvatar').style.background=color;
   document.getElementById('chatName').textContent=name;
   // Unsubscribe previous listener
-  if(activeChatUnsub){ activeChatUnsub(); activeChatUnsub=null; }
+  if(activeChatUnsub){ try{ activeChatUnsub(); }catch(e){} activeChatUnsub=null; }
   const box = document.getElementById('chatMessages');
   pendingRoomClient = name;
   if(!email){
