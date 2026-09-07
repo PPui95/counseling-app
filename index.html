@@ -719,10 +719,16 @@ textarea.form-input { min-height: 80px; resize: vertical; }
 
     <!-- ── Clients ── -->
     <div class="page" id="page-clients">
-      <div class="page-header"><h2>👥 ผู้รับบริการ</h2><p id="clientCount">0 คน ในระบบ</p></div>
+      <div class="page-header-row">
+        <div>
+          <h2>👥 ผู้รับบริการ</h2>
+          <p id="clientCount" style="margin:0;font-size:.85rem;color:var(--text-2)">0 คน ในระบบ</p>
+        </div>
+        <button class="btn btn-mint" onclick="openNewSession()">+ เพิ่มผู้รับบริการ</button>
+      </div>
       <div class="grid-2" id="clientsGrid">
         <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-3)">
-          ยังไม่มีผู้รับบริการ — เพิ่มบันทึก CO แล้วชื่อผู้รับบริการจะปรากฏที่นี่
+          ยังไม่มีผู้รับบริการ
         </div>
       </div>
     </div>
@@ -1120,11 +1126,31 @@ auth.onAuthStateChanged(async (firebaseUser) => {
   }
 });
 
+let toastTimer = null;
 function showToast(msg, ok=true){
   let t=document.getElementById('gsToast');
-  if(!t){t=document.createElement('div');t.id='gsToast';t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:20px;font-size:.85rem;font-weight:600;z-index:9999;transition:opacity .4s;white-space:nowrap';document.body.appendChild(t);}
-  t.textContent=msg;t.style.background=ok?'var(--mint)':'var(--coral)';t.style.color='#fff';t.style.opacity='1';
-  setTimeout(()=>t.style.opacity='0',3000);
+  if(!t){
+    t=document.createElement('div');t.id='gsToast';
+    // pointer-events:none is essential - the toast used to stay in the DOM at
+    // opacity 0 and silently swallow every click over its strip of the screen.
+    t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);'
+      +'padding:10px 20px;border-radius:20px;font-size:.85rem;font-weight:600;'
+      +'z-index:9999;transition:opacity .4s;pointer-events:none;'
+      +'max-width:min(90vw,420px);text-align:center;line-height:1.5;'
+      +'box-shadow:0 6px 20px rgba(0,0,0,.18)';
+    document.body.appendChild(t);
+  }
+  t.textContent=msg;
+  t.style.background=ok?'var(--mint)':'var(--coral)';
+  t.style.color='#fff';
+  t.style.opacity='1';
+  t.style.display='block';
+  clearTimeout(toastTimer);
+  // errors are usually longer, so give them a little more time to be read
+  toastTimer=setTimeout(()=>{
+    t.style.opacity='0';
+    setTimeout(()=>{ if(t.style.opacity==='0') t.style.display='none'; },500);
+  }, ok?3000:6000);
 }
 function showAuthError(msg){
   const el=document.getElementById('authError');
@@ -1434,6 +1460,8 @@ function showPage(id){
   document.querySelectorAll('.nav-item').forEach(n=>{
     if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes(`'${id}'`)) n.classList.add('active');
   });
+  // A modal left open would sit over the next page and swallow every click.
+  document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
   document.querySelector('.content-area').scrollTop=0;
   if(id==='progress') setTimeout(drawCharts,100);
   // The client's chat page is 'chat-cl' (this used to check 'client-chat', which
@@ -1606,7 +1634,11 @@ function renderClients(){
   const clients = Object.values(map);
   if(countEl) countEl.textContent = clients.length + ' คน ในระบบ';
   if(clients.length === 0){
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-3)">ยังไม่มีผู้รับบริการ — เพิ่มบันทึก CO แล้วชื่อผู้รับบริการจะปรากฏที่นี่</div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-3)">
+      ยังไม่มีผู้รับบริการ<br>
+      <span style="font-size:.82rem">เพิ่มคนแรกเพื่อเริ่มบันทึกการปรึกษาและเปิดห้องแชท</span><br>
+      <button class="btn btn-mint" style="margin-top:14px" onclick="openNewSession()">+ เพิ่มผู้รับบริการ</button>
+    </div>`;
     return;
   }
   const colors = ['var(--mint)','var(--sky)','var(--amber)','var(--coral)','#9B8FD9','#6DB5CA'];
