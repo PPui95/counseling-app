@@ -1092,6 +1092,13 @@ auth.onAuthStateChanged(async (firebaseUser) => {
   if (firebaseUser && !currentUser) {
     // Try localStorage first (instant)
     const cached = lsLoadUser();
+    // Repair a cached email that drifted from the token, or the chat room id
+    // built from it will not satisfy the security rules.
+    if (cached && cached.uid === firebaseUser.uid && firebaseUser.email
+        && (cached.email||'').toLowerCase() !== firebaseUser.email.toLowerCase()) {
+      cached.email = firebaseUser.email.toLowerCase();
+      lsSaveUser(cached);
+    }
     if (cached && cached.uid === firebaseUser.uid) {
       currentUser = cached;
       currentRole = currentUser.role;
@@ -1282,7 +1289,8 @@ async function doLogin(){
     // role comes from Firestore user profile
     const snap = await db.collection('users').doc(cred.user.uid).get();
     const profile = snap.data() || {};
-    currentUser = { uid: cred.user.uid, email: cred.user.email, displayName: profile.fullName || cred.user.displayName || email, role: profile.role || selectedRole };
+    currentUser = { uid: cred.user.uid, email: (cred.user.email||email).trim().toLowerCase(),
+      displayName: profile.fullName || cred.user.displayName || email, role: profile.role || selectedRole };
     currentRole = currentUser.role;
     lsSaveUser(currentUser);
     enterApp();
@@ -1304,11 +1312,12 @@ async function doRegister(){
   btn.textContent='⏳ กำลังสมัคร...'; btn.disabled=true;
   try {
     const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    const authEmail = (cred.user.email || email).trim().toLowerCase();
     await cred.user.updateProfile({ displayName: name });
     await db.collection('users').doc(cred.user.uid).set({
-      fullName: name, email, role: selectedRole, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      fullName: name, email: authEmail, role: selectedRole, createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    currentUser = { uid: cred.user.uid, email, displayName: name, role: selectedRole };
+    currentUser = { uid: cred.user.uid, email: authEmail, displayName: name, role: selectedRole };
     currentRole = selectedRole;
     lsSaveUser(currentUser);
     enterApp();
@@ -1908,7 +1917,7 @@ function renderClientPages(){
   const cav = document.getElementById('clCounselorAvatar'); if(cav) cav.textContent=cachedCo?cachedCo.displayName.charAt(0):'🩺';
   const chatCav = document.getElementById('clChatCounselorAvatar'); if(chatCav) chatCav.textContent=cachedCo?cachedCo.displayName.charAt(0):'🩺';
   const chatCname = document.getElementById('clChatCounselorName'); if(chatCname) chatCname.textContent=coName;
-  const myEmail = (currentUser?.email||'').trim().toLowerCase();
+  const myEmail = myEmailLower();
   // Set up client chat room if we already know the counselor
   if(cachedCo?.uid && myEmail && !activeChatRoomId){
     activeChatRoomId = chatRoomId(cachedCo.uid, myEmail);
@@ -2113,9 +2122,16 @@ function subscribeChat(containerId, roomId, isClient){
         console.warn('Chat subscribe err:', err.code, err.message);
         showToast('⚠️ โหลดข้อความไม่สำเร็จ: '+(err.code||err.message), false);
         const c=document.getElementById(containerId);
+        const tokenEmail = auth.currentUser?.email || '(ไม่ทราบ)';
+        const expected = roomId.split('__')[0] + '__' + tokenEmail.toLowerCase();
+        const mismatch = err.code==='permission-denied' && roomId !== expected;
         if(c) c.insertAdjacentHTML('afterbegin',
-          '<div style="padding:10px;margin-bottom:8px;background:#E07B6A22;border-radius:8px;font-size:.8rem;color:var(--coral);text-align:center">'
-          +'เชื่อมต่อห้องแชทไม่ได้ ('+escHtml(err.code||'')+') — ข้อความใหม่อาจไม่แสดงอัตโนมัติ</div>');
+          '<div style="padding:10px;margin-bottom:8px;background:#E07B6A22;border-radius:8px;font-size:.78rem;color:var(--coral);text-align:left;line-height:1.7">'
+          +'<strong>เชื่อมต่อห้องแชทไม่ได้ ('+escHtml(err.code||'')+')</strong><br>'
+          +'ห้อง: <code style="word-break:break-all">'+escHtml(roomId)+'</code><br>'
+          +'อีเมลบัญชีคุณ: <code>'+escHtml(tokenEmail)+'</code>'
+          +(mismatch ? '<br><strong>สาเหตุ: ชื่อห้องไม่ตรงกับอีเมลบัญชี</strong> — กด "🩺 ตรวจสอบระบบ" ในโปรไฟล์เพื่อซ่อมแซม' : '')
+          +'</div>');
       });
   } catch(e){
     console.warn('subscribeChat:', e.message);
@@ -2312,7 +2328,11 @@ function thaiDate(d){
 const ASSESS_LABEL = {PHQ9:'PHQ-9', GAD7:'GAD-7', SWLS:'SWLS'};
 // Stamped onto the client's own records so their counselor may read them.
 function myCounselorId(){ return (lsLoad('myCounselor',null)||{}).uid || null; }
-function myEmailLower(){ return (currentUser?.email||'').trim().toLowerCase(); }
+// Prefer the Firebase token email: security rules compare against
+// request.auth.token.email, so anything else can silently mismatch.
+function myEmailLower(){
+  return (auth.currentUser?.email || currentUser?.email || '').trim().toLowerCase();
+}
 // Records store the display label, so compare on that.
 function assessDoneToday(type){
   const label = ASSESS_LABEL[type] || type;
@@ -2375,6 +2395,10 @@ async function runDiagnostics(){
 
   line(null, 'บัญชี', (currentUser?.email||'-') + ' · บทบาท: ' + (currentRole||'-'));
   line(!!auth.currentUser, 'เชื่อมต่อ Firebase Auth', auth.currentUser ? 'uid '+auth.currentUser.uid : 'ไม่ได้ล็อกอินกับ Firebase');
+  const tokenEmail = (auth.currentUser?.email||'').toLowerCase();
+  const appEmail = (currentUser?.email||'').toLowerCase();
+  line(tokenEmail && tokenEmail===appEmail, 'อีเมลในแอปตรงกับอีเมลของบัญชี',
+    tokenEmail===appEmail ? tokenEmail : 'ในแอป "'+appEmail+'" แต่บัญชีจริงคือ "'+tokenEmail+'" — ทำให้เข้าห้องแชทไม่ได้');
 
   // profile doc - clientLinks writes depend on role being stored here
   try {
@@ -2428,7 +2452,14 @@ async function runDiagnostics(){
         + (allLinked ? '' : ' — ยังมีข้อมูลเดิมที่ยังไม่ได้ผูก กดปุ่มด้านล่างเพื่อผูก'));
       if(!allLinked && co?.uid) window.__needsBackfill = true;
     } catch(e){ line(false, 'นับประวัติของคุณ', e.code+' — '+e.message); }
+    const expectRoom = co?.uid ? (co.uid + '__' + tokenEmail) : null;
     line(!!activeChatRoomId, 'ห้องแชท', activeChatRoomId || 'ยังไม่มีห้อง — ส่งข้อความไม่ถึงนักจิตวิทยา');
+    if(activeChatRoomId && expectRoom){
+      const okRoom = activeChatRoomId === expectRoom;
+      line(okRoom, 'ชื่อห้องตรงกับบัญชีของคุณ',
+        okRoom ? 'ตรง' : 'ห้องที่ใช้: '+activeChatRoomId+' / ที่ควรเป็น: '+expectRoom);
+      if(!okRoom) window.__needsRoomFix = true;
+    }
     if(activeChatRoomId){
       try {
         const snap = await db.collection('chats').doc(activeChatRoomId).collection('messages').orderBy('sentAt','asc').limit(200).get();
@@ -2439,10 +2470,25 @@ async function runDiagnostics(){
 
   document.getElementById('clientModalBody').innerHTML =
     '<div style="font-size:.88rem">'+out.join('')+'</div>'
+    + (window.__needsRoomFix
+        ? '<button class="btn btn-mint" style="width:100%;justify-content:center;margin-top:14px" onclick="repairChatRoom()">🔧 ซ่อมแซมห้องแชท</button>'
+        : '')
     + (window.__needsBackfill
         ? '<button class="btn btn-mint" style="width:100%;justify-content:center;margin-top:14px" onclick="manualBackfill()">🔗 ผูกข้อมูลเดิมให้นักจิตวิทยาเห็น</button>'
         : '')
     + '<button class="btn btn-outline" style="width:100%;justify-content:center;margin-top:10px" onclick="copyDiagnostics()">📋 คัดลอกผลตรวจ</button>';
+}
+
+function repairChatRoom(){
+  const co = lsLoad('myCounselor', null);
+  const tokenEmail = (auth.currentUser?.email||'').toLowerCase();
+  if(!co?.uid || !tokenEmail){ showToast('ยังซ่อมไม่ได้ — ไม่พบนักจิตวิทยาหรืออีเมลบัญชี', false); return; }
+  if(currentUser) { currentUser.email = tokenEmail; lsSaveUser(currentUser); }
+  activeChatRoomId = chatRoomId(co.uid, tokenEmail);
+  subscribeChat('chatMessagesClient', activeChatRoomId, true);
+  window.__needsRoomFix = false;
+  showToast('✅ ซ่อมแซมห้องแชทแล้ว ลองส่งข้อความอีกครั้ง');
+  runDiagnostics();
 }
 
 async function manualBackfill(){
