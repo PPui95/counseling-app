@@ -772,6 +772,7 @@ textarea.form-input { min-height: 80px; resize: vertical; }
           <div class="section-title">ตั้งค่าบัญชี</div>
           <div style="display:flex;flex-direction:column;gap:4px">
             <div class="nav-item" style="border-radius:8px;cursor:pointer" onclick="openEditProfile()"><span class="nav-icon">✏️</span> แก้ไขข้อมูลส่วนตัว</div>
+            <div class="nav-item" style="border-radius:8px;cursor:pointer" onclick="runDiagnostics()"><span class="nav-icon">🩺</span> ตรวจสอบระบบ</div>
             <div class="nav-item" style="border-radius:8px"><span class="nav-icon">🔒</span> เปลี่ยนรหัสผ่าน</div>
             <div class="nav-item" style="border-radius:8px"><span class="nav-icon">🔔</span> การแจ้งเตือน</div>
             <div class="nav-item" style="border-radius:8px"><span class="nav-icon">🌐</span> ภาษา · ไทย</div>
@@ -992,6 +993,7 @@ textarea.form-input { min-height: 80px; resize: vertical; }
           <div class="section-title">ตั้งค่า</div>
           <div style="display:flex;flex-direction:column;gap:4px">
             <div class="nav-item" style="border-radius:8px;cursor:pointer" onclick="openEditProfile()"><span class="nav-icon">✏️</span> แก้ไขข้อมูลส่วนตัว</div>
+            <div class="nav-item" style="border-radius:8px;cursor:pointer" onclick="runDiagnostics()"><span class="nav-icon">🩺</span> ตรวจสอบระบบ</div>
             <div class="nav-item" style="border-radius:8px"><span class="nav-icon">🔒</span> เปลี่ยนรหัสผ่าน</div>
             <div class="nav-item" style="border-radius:8px"><span class="nav-icon">🛡️</span> ความเป็นส่วนตัว</div>
             <div class="nav-item" style="border-radius:8px"><span class="nav-icon">🔔</span> การแจ้งเตือน</div>
@@ -1434,9 +1436,13 @@ function showPage(id){
   });
   document.querySelector('.content-area').scrollTop=0;
   if(id==='progress') setTimeout(drawCharts,100);
-  // Subscribe client chat when navigating to client-chat page
-  if(id==='client-chat' && currentRole==='client' && activeChatRoomId){
-    setTimeout(()=>subscribeChat('chatMessagesClient', activeChatRoomId, true), 100);
+  // The client's chat page is 'chat-cl' (this used to check 'client-chat', which
+  // never matched, so a chat whose listener failed to attach stayed dead).
+  if(id==='chat-cl' && currentRole==='client'){
+    setTimeout(()=>{
+      if(activeChatRoomId) subscribeChat('chatMessagesClient', activeChatRoomId, true);
+      else renderClientPages(); // no room yet - try resolving the counselor again
+    }, 100);
   }
   // Sync bottom nav active
   document.querySelectorAll('.bnav-item').forEach(b=>{
@@ -1514,7 +1520,12 @@ async function saveSession(){
     lsSave('sessions', sessions);
     showToast('💾 บันทึกสำเร็จ!');
     // Try Firestore in background
-    db.collection('sessions').add(data).then(ref=>{ s.id=ref.id; lsSave('sessions',sessions); }).catch(e=>console.warn('Firestore session sync:',e.message));
+    db.collection('sessions').add(data)
+      .then(ref=>{ s.id=ref.id; lsSave('sessions',sessions); })
+      .catch(e=>{
+        console.warn('Firestore session sync:', e.code, e.message);
+        showToast('⚠️ บันทึกขึ้นคลาวด์ไม่สำเร็จ ('+(e.code||e.message)+') — ข้อมูลอยู่ในเครื่องนี้เท่านั้น', false);
+      });
     // Publish a link doc so the client can find their counselor (rules-safe: keyed by client email)
     if(ce){
       db.collection('clientLinks').doc(ce).set({
@@ -1522,7 +1533,10 @@ async function saveSession(){
         counselorId:currentUser.uid,
         counselorName:currentUser.displayName||currentUser.email||'นักจิตวิทยา',
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      },{merge:true}).catch(e=>console.warn('clientLink sync:',e.message));
+      },{merge:true}).catch(e=>{
+        console.warn('clientLink sync:', e.code, e.message);
+        showToast('⚠️ เชื่อมผู้รับบริการกับบัญชีคุณไม่สำเร็จ ('+(e.code||e.message)+') — เขาจะยังแชทกับคุณไม่ได้', false);
+      });
     }
   } else { showToast('⚠️ โหมดทดลอง — ข้อมูลไม่บันทึกจริง',false); }
 }
@@ -1852,6 +1866,9 @@ function renderClientPages(){
   if(cachedCo?.uid && myEmail && !activeChatRoomId){
     activeChatRoomId = chatRoomId(cachedCo.uid, myEmail);
     subscribeChat('chatMessagesClient', activeChatRoomId, true);
+    // Records written before this counselor was linked carry no counselorId and
+    // stay invisible to them. This used to run only on the very first resolve.
+    backfillCounselorOnRecords(cachedCo.uid, myEmail);
   }
   // Resolve counselor from the link doc the counselor published (readable only by this client)
   if(!cachedCo && myEmail){
@@ -1872,7 +1889,10 @@ function renderClientPages(){
         }
         backfillCounselorOnRecords(l.counselorId, myEmail);
         renderClientPages(); // refresh the sharing notice now that the counselor is known
-      }).catch(e=>console.warn('clientLink lookup:', e.message));
+      }).catch(e=>{
+        console.warn('clientLink lookup:', e.code, e.message);
+        showToast('⚠️ ค้นหานักจิตวิทยาของคุณไม่สำเร็จ ('+(e.code||e.message)+')', false);
+      });
   }
 
   // Latest assessment scores
@@ -2027,20 +2047,33 @@ function selectRoom(el, name, email, initial, color) {
 }
 
 function subscribeChat(containerId, roomId, isClient){
-  // Load from localStorage first (offline cache)
-  const cached = lsLoad('chat_'+roomId, []);
-  renderChatMessages(containerId, cached, isClient);
-  // Then subscribe Firestore real-time
+  if(!roomId) return;
+  // Drop any previous listener so repeated calls cannot stack up
+  if(activeChatUnsub){ try{ activeChatUnsub(); }catch(e){} activeChatUnsub=null; }
+  // Show the offline cache immediately
+  renderChatMessages(containerId, lsLoad('chat_'+roomId, []), isClient);
   try {
-    const unsub = db.collection('chats').doc(roomId).collection('messages')
-      .orderBy('sentAt','asc').limit(100)
-      .onSnapshot(snap=>{
+    activeChatUnsub = db.collection('chats').doc(roomId).collection('messages')
+      .orderBy('sentAt','asc').limit(200)
+      .onSnapshot({ includeMetadataChanges:true }, snap=>{
         const msgs = snap.docs.map(d=>({...d.data(), id:d.id}));
-        lsSave('chat_'+roomId, msgs.map(m=>({sender:m.sender,role:m.role,text:m.text,sentAt:m.sentAt?.toDate?.()?.toISOString()||m.sentAt})));
+        lsSave('chat_'+roomId, msgs.map(m=>({sender:m.sender,role:m.role,text:m.text,
+          sentAt:m.sentAt?.toDate?.()?.toISOString()||m.sentAt})));
         renderChatMessages(containerId, msgs, isClient);
-      }, err=>{ console.warn('Chat subscribe err:', err.message); });
-    if(isClient) activeChatUnsub = unsub; else activeChatUnsub = unsub;
-  } catch(e){ console.warn('subscribeChat:', e.message); }
+      }, err=>{
+        // A dead listener used to fail silently: messages sent fine but never
+        // appeared on the sender's own screen, with nothing to explain why.
+        console.warn('Chat subscribe err:', err.code, err.message);
+        showToast('⚠️ โหลดข้อความไม่สำเร็จ: '+(err.code||err.message), false);
+        const c=document.getElementById(containerId);
+        if(c) c.insertAdjacentHTML('afterbegin',
+          '<div style="padding:10px;margin-bottom:8px;background:#E07B6A22;border-radius:8px;font-size:.8rem;color:var(--coral);text-align:center">'
+          +'เชื่อมต่อห้องแชทไม่ได้ ('+escHtml(err.code||'')+') — ข้อความใหม่อาจไม่แสดงอัตโนมัติ</div>');
+      });
+  } catch(e){
+    console.warn('subscribeChat:', e.message);
+    showToast('⚠️ เปิดห้องแชทไม่ได้: '+e.message, false);
+  }
 }
 
 function renderChatMessages(containerId, msgs, isClient){
@@ -2072,13 +2105,13 @@ async function sendMsg(){
     return;
   }
   inp.value='';
+  addMsg('chatMessages','mine',txt); // optimistic - the snapshot re-renders over it
   const msg = { sender: currentUser?.displayName||currentUser?.email||'นักจิตวิทยา', role:'counselor', text:txt, sentAt:firebase.firestore.FieldValue.serverTimestamp() };
   try {
     await db.collection('chats').doc(activeChatRoomId).collection('messages').add(msg);
   } catch(e){
-    // Offline fallback: add locally
-    addMsg('chatMessages','mine',txt);
-    console.warn('sendMsg Firestore:', e.message);
+    console.warn('sendMsg Firestore:', e.code, e.message);
+    showToast('⚠️ ส่งข้อความไม่สำเร็จ: '+(e.code||e.message), false);
   }
 }
 
@@ -2086,13 +2119,18 @@ async function sendMsgClient(){
   const inp=document.getElementById('chatInputClient');
   const txt=inp.value.trim();if(!txt)return;
   inp.value='';
-  if(!activeChatRoomId) { addMsg('chatMessagesClient','mine',txt); return; }
+  if(!activeChatRoomId){
+    addMsg('chatMessagesClient','mine',txt);
+    showToast('⚠️ ยังไม่ได้เชื่อมกับนักจิตวิทยา ข้อความนี้ยังไม่ถูกส่ง', false);
+    return;
+  }
+  addMsg('chatMessagesClient','mine',txt); // optimistic - the snapshot re-renders over it
   const msg = { sender: currentUser?.displayName||currentUser?.email||'ผู้รับบริการ', role:'client', text:txt, sentAt:firebase.firestore.FieldValue.serverTimestamp() };
   try {
     await db.collection('chats').doc(activeChatRoomId).collection('messages').add(msg);
   } catch(e){
-    addMsg('chatMessagesClient','mine',txt);
-    console.warn('sendMsgClient Firestore:', e.message);
+    console.warn('sendMsgClient Firestore:', e.code, e.message);
+    showToast('⚠️ ส่งข้อความไม่สำเร็จ: '+(e.code||e.message), false);
   }
 }
 
@@ -2271,6 +2309,82 @@ function renderDailyLocks(){
       note.style.display='block';
     }
   }
+}
+
+/* ══════════ DIAGNOSTICS ══════════ */
+// Every Firestore failure used to end up in console.warn where nobody saw it.
+// This runs the same operations the app does and reports exactly what breaks.
+async function runDiagnostics(){
+  const out = [];
+  const line = (ok, label, detail) =>
+    out.push(`<div style="padding:7px 0;border-bottom:1px solid var(--border)">
+      <span style="font-weight:700">${ok===null?'⏺':ok?'✅':'❌'}</span> ${label}
+      ${detail?`<div style="font-size:.78rem;color:${ok?'var(--text-3)':'var(--coral)'};margin-left:20px;word-break:break-all">${escHtml(String(detail))}</div>`:''}
+    </div>`);
+
+  document.getElementById('clientModalName').textContent = 'ตรวจสอบระบบ';
+  document.getElementById('clientModalBody').innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-3)">กำลังตรวจ...</div>';
+  openModal('clientModal');
+
+  line(null, 'บัญชี', (currentUser?.email||'-') + ' · บทบาท: ' + (currentRole||'-'));
+  line(!!auth.currentUser, 'เชื่อมต่อ Firebase Auth', auth.currentUser ? 'uid '+auth.currentUser.uid : 'ไม่ได้ล็อกอินกับ Firebase');
+
+  // profile doc - clientLinks writes depend on role being stored here
+  try {
+    const d = await db.collection('users').doc(currentUser.uid).get();
+    line(d.exists, 'อ่านโปรไฟล์ตัวเองจาก Firestore',
+      d.exists ? 'role ที่บันทึกไว้: ' + (d.data().role||'(ไม่มี)') : 'ไม่พบเอกสารโปรไฟล์ — clientLinks จะเขียนไม่ได้');
+    if(d.exists && currentRole==='counselor' && d.data().role!=='counselor')
+      line(false, 'บทบาทใน Firestore ไม่ตรงกับที่ใช้งาน', 'ใน Firestore เป็น "'+d.data().role+'" ทำให้เพิ่มผู้รับบริการไม่สำเร็จ');
+  } catch(e){ line(false, 'อ่านโปรไฟล์ตัวเอง', e.code+' — '+e.message); }
+
+  if(currentRole==='counselor'){
+    try {
+      const q = await db.collection('sessions').where('counselorId','==',currentUser.uid).get();
+      line(true, 'อ่านบันทึก CO จากคลาวด์', q.size + ' รายการ');
+    } catch(e){ line(false, 'อ่านบันทึก CO จากคลาวด์', e.code+' — '+e.message); }
+    const emails = [...new Set(sessions.map(x=>(x.clientEmail||'').trim().toLowerCase()).filter(Boolean))];
+    line(emails.length>0, 'ผู้รับบริการที่มีอีเมล', emails.length ? emails.join(', ') : 'ยังไม่มีใครมีอีเมล — แชทและกราฟจะใช้ไม่ได้');
+    for(const em of emails.slice(0,5)){
+      try {
+        const d = await db.collection('clientLinks').doc(em).get();
+        line(d.exists && d.data().counselorId===currentUser.uid, 'การเชื่อมกับ '+em,
+          !d.exists ? 'ยังไม่มีการเชื่อม — ให้แก้ไขบันทึก CO ของคนนี้แล้วบันทึกใหม่'
+            : d.data().counselorId===currentUser.uid ? 'เชื่อมกับคุณแล้ว' : 'เชื่อมอยู่กับนักจิตวิทยาคนอื่น');
+      } catch(e){ line(false, 'การเชื่อมกับ '+em, e.code+' — '+e.message); }
+      try {
+        const a = await db.collection('assessments').where('counselorId','==',currentUser.uid).where('userEmail','==',em).get();
+        const m = await db.collection('moods').where('counselorId','==',currentUser.uid).where('userEmail','==',em).get();
+        line(true, 'ข้อมูลของ '+em+' ที่คุณเห็นได้', a.size+' ผลประเมิน, '+m.size+' บันทึกอารมณ์'
+          + (a.size+m.size===0 ? ' (ถ้าเขาทำไว้แล้วแต่ขึ้น 0 ให้เขาเปิดแอปหนึ่งครั้งเพื่อผูกข้อมูล)' : ''));
+      } catch(e){ line(false, 'อ่านข้อมูลของ '+em, e.code+' — '+e.message); }
+    }
+  } else {
+    const co = lsLoad('myCounselor', null);
+    line(!!co?.uid, 'นักจิตวิทยาที่ผูกกับคุณ', co?.uid ? co.displayName : 'ยังไม่พบ — ให้นักจิตวิทยาใส่อีเมลของคุณในบันทึก CO');
+    try {
+      const d = await db.collection('clientLinks').doc((currentUser.email||'').toLowerCase()).get();
+      line(d.exists, 'เอกสารการเชื่อมในคลาวด์', d.exists ? 'พบ (CO: '+(d.data().counselorName||'-')+')' : 'ไม่พบสำหรับอีเมล '+(currentUser.email||''));
+    } catch(e){ line(false, 'อ่านเอกสารการเชื่อม', e.code+' — '+e.message); }
+    line(!!activeChatRoomId, 'ห้องแชท', activeChatRoomId || 'ยังไม่มีห้อง — ส่งข้อความไม่ถึงนักจิตวิทยา');
+    if(activeChatRoomId){
+      try {
+        const snap = await db.collection('chats').doc(activeChatRoomId).collection('messages').orderBy('sentAt','asc').limit(200).get();
+        line(true, 'อ่านข้อความในห้องแชท', snap.size + ' ข้อความ');
+      } catch(e){ line(false, 'อ่านข้อความในห้องแชท', e.code+' — '+e.message); }
+    }
+  }
+
+  document.getElementById('clientModalBody').innerHTML =
+    '<div style="font-size:.88rem">'+out.join('')+'</div>'
+    + '<button class="btn btn-outline" style="width:100%;justify-content:center;margin-top:14px" onclick="copyDiagnostics()">📋 คัดลอกผลตรวจ</button>';
+}
+
+function copyDiagnostics(){
+  const t = document.getElementById('clientModalBody').innerText;
+  navigator.clipboard?.writeText(t).then(
+    ()=>showToast('📋 คัดลอกแล้ว — วางส่งให้ผู้ดูแลระบบได้เลย'),
+    ()=>showToast('คัดลอกไม่สำเร็จ ลองแคปหน้าจอแทน', false));
 }
 
 /* ══════════ MODAL ══════════ */
