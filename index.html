@@ -1743,14 +1743,15 @@ async function showClientDetail(name){
       <span style="font-size:1.1rem;font-weight:800;margin-left:8px">${moodAvg}</span>
       <span style="font-size:.78rem;color:var(--text-3)">/ 5 · บันทึก ${moods.length} วัน</span>
     </div>
-    <div style="font-weight:700;font-size:.85rem;margin-bottom:6px">อารมณ์ 14 วันที่ผ่านมา</div>
-    <canvas id="coMoodCanvas" width="400" height="130" style="margin-bottom:14px"></canvas>
-    <div style="font-weight:700;font-size:.85rem;margin-bottom:6px">แนวโน้ม PHQ-9</div>
-    <canvas id="coPhq9Canvas" width="400" height="130" style="margin-bottom:14px"></canvas>
-    <div style="font-weight:700;font-size:.85rem;margin-bottom:6px">แนวโน้ม GAD-7</div>
-    <canvas id="coGad7Canvas" width="400" height="130" style="margin-bottom:14px"></canvas>
-    <div style="font-weight:700;font-size:.85rem;margin-bottom:6px">แนวโน้ม SWLS (ยิ่งสูงยิ่งดี)</div>
-    <canvas id="coSwlsCanvas" width="400" height="130"></canvas>
+    <div id="coWrapMood"><div style="font-weight:700;font-size:.85rem;margin-bottom:6px">อารมณ์ 14 วันที่ผ่านมา</div>
+      <canvas id="coMoodCanvas" width="400" height="130" style="margin-bottom:14px"></canvas></div>
+    <div id="coWrapPHQ-9"><div style="font-weight:700;font-size:.85rem;margin-bottom:6px">แนวโน้ม PHQ-9</div>
+      <canvas id="coPhq9Canvas" width="400" height="130" style="margin-bottom:14px"></canvas></div>
+    <div id="coWrapGAD-7"><div style="font-weight:700;font-size:.85rem;margin-bottom:6px">แนวโน้ม GAD-7</div>
+      <canvas id="coGad7Canvas" width="400" height="130" style="margin-bottom:14px"></canvas></div>
+    <div id="coWrapSWLS"><div style="font-weight:700;font-size:.85rem;margin-bottom:6px">แนวโน้ม SWLS (ยิ่งสูงยิ่งดี)</div>
+      <canvas id="coSwlsCanvas" width="400" height="130"></canvas></div>
+    <div id="coMissingNote"></div>
   `;
   coDetailCharts = { assess, moods };
   drawClientDetailCharts();
@@ -1759,22 +1760,36 @@ async function showClientDetail(name){
 function drawClientDetailCharts(){
   if(!coDetailCharts) return;
   const { assess, moods } = coDetailCharts;
-  drawMoodBars(document.getElementById('coMoodCanvas'), moods.slice(0,14).reverse());
+  const missing = [];
+
+  // An empty canvas left a large blank gap that read as a broken screen.
+  // Collapse the section instead and list what has not been done yet.
+  const moodRows = moods.slice(0,14).reverse();
+  const mw = document.getElementById('coWrapMood');
+  if(moodRows.length === 0){ if(mw) mw.style.display='none'; missing.push('บันทึกอารมณ์'); }
+  else { if(mw) mw.style.display=''; drawMoodBars(document.getElementById('coMoodCanvas'), moodRows); }
+
   [['coPhq9Canvas','PHQ-9',27,'#3DAA7D'],
    ['coGad7Canvas','GAD-7',21,'#6BAED6'],
    ['coSwlsCanvas','SWLS',35,'#E6A94A']].forEach(([id,type,max,col])=>{
+    const wrap = document.getElementById('coWrap'+type);
+    const rows = assess.filter(a=>a.type===type).slice(0,6).reverse();
+    if(rows.length === 0){ if(wrap) wrap.style.display='none'; missing.push(type); return; }
+    if(wrap) wrap.style.display='';
     const c=document.getElementById(id); if(!c) return;
     c.width=c.parentElement.clientWidth-8||360;
-    const ctx=c.getContext('2d'), w=c.width, h=c.height;
-    const rows=assess.filter(a=>a.type===type).slice(0,6).reverse();
-    ctx.clearRect(0,0,w,h);
-    if(rows.length===0){
-      ctx.fillStyle='#aaa';ctx.font='12px sans-serif';ctx.textAlign='center';
-      ctx.fillText('ยังไม่ได้ทำ '+type,w/2,h/2);
-      return;
-    }
-    drawLineChart(ctx,w,h,rows.map(a=>a.score),max,col,rows.map(a=>a.date||''));
+    const ctx=c.getContext('2d');
+    drawLineChart(ctx,c.width,c.height,rows.map(a=>a.score),max,col,rows.map(a=>a.date||''));
   });
+
+  const note = document.getElementById('coMissingNote');
+  if(note){
+    note.innerHTML = missing.length === 0 ? '' :
+      '<div style="margin-top:14px;padding:12px;background:var(--surface-alt);border-radius:10px;font-size:.82rem;color:var(--text-2);line-height:1.7">'
+      + 'ยังไม่มีข้อมูล: <strong>' + missing.join(', ') + '</strong><br>'
+      + '<span style="color:var(--text-3)">ถ้าผู้รับบริการเคยทำไว้แล้วแต่ไม่ขึ้นที่นี่ แปลว่าข้อมูลนั้นบันทึกไว้ก่อนที่จะผูกบัญชีกับคุณ '
+      + 'ให้เขาเปิดแอปหนึ่งครั้ง ระบบจะผูกข้อมูลเดิมให้อัตโนมัติ (หรือกด "🩺 ตรวจสอบระบบ" ในโปรไฟล์ของเขา)</span></div>';
+  }
 }
 
 /* ══════════ DASHBOARD (Counselor) ══════════ */
@@ -2398,6 +2413,21 @@ async function runDiagnostics(){
       const d = await db.collection('clientLinks').doc((currentUser.email||'').toLowerCase()).get();
       line(d.exists, 'เอกสารการเชื่อมในคลาวด์', d.exists ? 'พบ (CO: '+(d.data().counselorName||'-')+')' : 'ไม่พบสำหรับอีเมล '+(currentUser.email||''));
     } catch(e){ line(false, 'อ่านเอกสารการเชื่อม', e.code+' — '+e.message); }
+    // Only the client can see their own full history, so count it here.
+    try {
+      const [a,m] = await Promise.all([
+        db.collection('assessments').where('userId','==',currentUser.uid).get(),
+        db.collection('moods').where('userId','==',currentUser.uid).get()
+      ]);
+      const linkedA = a.docs.filter(d=>d.data().counselorId===co?.uid).length;
+      const linkedM = m.docs.filter(d=>d.data().counselorId===co?.uid).length;
+      line(true, 'ประวัติของคุณทั้งหมด', a.size+' ผลประเมิน, '+m.size+' บันทึกอารมณ์');
+      const allLinked = (linkedA===a.size && linkedM===m.size);
+      line(allLinked, 'ที่นักจิตวิทยามองเห็น',
+        linkedA+' ผลประเมิน, '+linkedM+' บันทึกอารมณ์'
+        + (allLinked ? '' : ' — ยังมีข้อมูลเดิมที่ยังไม่ได้ผูก กดปุ่มด้านล่างเพื่อผูก'));
+      if(!allLinked && co?.uid) window.__needsBackfill = true;
+    } catch(e){ line(false, 'นับประวัติของคุณ', e.code+' — '+e.message); }
     line(!!activeChatRoomId, 'ห้องแชท', activeChatRoomId || 'ยังไม่มีห้อง — ส่งข้อความไม่ถึงนักจิตวิทยา');
     if(activeChatRoomId){
       try {
@@ -2409,7 +2439,20 @@ async function runDiagnostics(){
 
   document.getElementById('clientModalBody').innerHTML =
     '<div style="font-size:.88rem">'+out.join('')+'</div>'
-    + '<button class="btn btn-outline" style="width:100%;justify-content:center;margin-top:14px" onclick="copyDiagnostics()">📋 คัดลอกผลตรวจ</button>';
+    + (window.__needsBackfill
+        ? '<button class="btn btn-mint" style="width:100%;justify-content:center;margin-top:14px" onclick="manualBackfill()">🔗 ผูกข้อมูลเดิมให้นักจิตวิทยาเห็น</button>'
+        : '')
+    + '<button class="btn btn-outline" style="width:100%;justify-content:center;margin-top:10px" onclick="copyDiagnostics()">📋 คัดลอกผลตรวจ</button>';
+}
+
+async function manualBackfill(){
+  const co = lsLoad('myCounselor', null);
+  if(!co?.uid){ showToast('ยังไม่มีนักจิตวิทยาผูกกับบัญชีคุณ', false); return; }
+  showToast('⏳ กำลังผูกข้อมูล...');
+  await backfillCounselorOnRecords(co.uid, (currentUser.email||'').toLowerCase());
+  window.__needsBackfill = false;
+  showToast('✅ ผูกข้อมูลเดิมเรียบร้อย — นักจิตวิทยาเห็นแล้ว');
+  runDiagnostics();
 }
 
 function copyDiagnostics(){
