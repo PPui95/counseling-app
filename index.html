@@ -1736,9 +1736,9 @@ function drawClientDetailCharts(){
     const ctx=c.getContext('2d'), w=c.width, h=c.height;
     const rows=assess.filter(a=>a.type===type).slice(0,6).reverse();
     ctx.clearRect(0,0,w,h);
-    if(rows.length<2){
+    if(rows.length===0){
       ctx.fillStyle='#aaa';ctx.font='12px sans-serif';ctx.textAlign='center';
-      ctx.fillText(rows.length===1?('ทำ '+type+' แล้ว 1 ครั้ง ('+rows[0].score+' คะแนน) — ต้อง 2 ครั้งขึ้นไปจึงเห็นแนวโน้ม'):('ยังไม่ได้ทำ '+type),w/2,h/2);
+      ctx.fillText('ยังไม่ได้ทำ '+type,w/2,h/2);
       return;
     }
     drawLineChart(ctx,w,h,rows.map(a=>a.score),max,col,rows.map(a=>a.date||''));
@@ -2447,10 +2447,8 @@ function drawPHQ9Chart(){
   const w=c.width,h=c.height;
   // Use real PHQ-9 data
   const phq = assessHistory.filter(a=>a.type==='PHQ-9').slice(0,6).reverse();
-  const data = phq.length > 1 ? phq.map(a=>a.score) : (phq.length===1?[phq[0].score]:[]);
-  const labels = phq.length > 0 ? phq.map(a=>a.date||'') : [];
-  if(data.length < 2){ ctx.clearRect(0,0,w,h); ctx.fillStyle='#aaa'; ctx.font='13px sans-serif'; ctx.textAlign='center'; ctx.fillText('ทำแบบประเมิน PHQ-9 อย่างน้อย 2 ครั้ง เพื่อดูแนวโน้ม',w/2,h/2); return; }
-  drawLineChart(ctx,w,h,data,27,'#3DAA7D',labels);
+  if(phq.length === 0){ ctx.clearRect(0,0,w,h); ctx.fillStyle='#aaa'; ctx.font='13px sans-serif'; ctx.textAlign='center'; ctx.fillText('ยังไม่ได้ทำแบบประเมิน PHQ-9',w/2,h/2); return; }
+  drawLineChart(ctx,w,h,phq.map(a=>a.score),27,'#3DAA7D',phq.map(a=>a.date||''));
 }
 function drawGAD7Chart(){
   const c=document.getElementById('gad7Canvas');if(!c)return;
@@ -2459,10 +2457,8 @@ function drawGAD7Chart(){
   const w=c.width,h=c.height;
   // Use real GAD-7 data
   const gad = assessHistory.filter(a=>a.type==='GAD-7').slice(0,6).reverse();
-  const data = gad.length > 1 ? gad.map(a=>a.score) : [];
-  const labels = gad.length > 0 ? gad.map(a=>a.date||'') : [];
-  if(data.length < 2){ ctx.clearRect(0,0,w,h); ctx.fillStyle='#aaa'; ctx.font='13px sans-serif'; ctx.textAlign='center'; ctx.fillText('ทำแบบประเมิน GAD-7 อย่างน้อย 2 ครั้ง เพื่อดูแนวโน้ม',w/2,h/2); return; }
-  drawLineChart(ctx,w,h,data,21,'#6BAED6',labels);
+  if(gad.length === 0){ ctx.clearRect(0,0,w,h); ctx.fillStyle='#aaa'; ctx.font='13px sans-serif'; ctx.textAlign='center'; ctx.fillText('ยังไม่ได้ทำแบบประเมิน GAD-7',w/2,h/2); return; }
+  drawLineChart(ctx,w,h,gad.map(a=>a.score),21,'#6BAED6',gad.map(a=>a.date||''));
 }
 
 function drawSWLSChart(){
@@ -2471,19 +2467,19 @@ function drawSWLSChart(){
   const ctx=c.getContext('2d');
   const w=c.width,h=c.height;
   const sw = assessHistory.filter(a=>a.type==='SWLS').slice(0,6).reverse();
-  const data = sw.length > 1 ? sw.map(a=>a.score) : [];
-  const labels = sw.map(a=>a.date||'');
-  if(data.length < 2){
+  if(sw.length === 0){
     ctx.clearRect(0,0,w,h); ctx.fillStyle='#aaa'; ctx.font='13px sans-serif'; ctx.textAlign='center';
-    ctx.fillText('ทำแบบประเมิน SWLS อย่างน้อย 2 ครั้ง เพื่อดูแนวโน้ม',w/2,h/2); return;
+    ctx.fillText('ยังไม่ได้ทำแบบประเมิน SWLS',w/2,h/2); return;
   }
-  drawLineChart(ctx,w,h,data,35,'#E6A94A',labels);
+  drawLineChart(ctx,w,h,sw.map(a=>a.score),35,'#E6A94A',sw.map(a=>a.date||''));
 }
 
 function drawLineChart(ctx,w,h,data,max,col,labels){
   ctx.clearRect(0,0,w,h);
   const padL=32,padR=16,padT=14,padB=28;
   const cw=w-padL-padR,ch=h-padT-padB;
+  // One point still deserves to be shown - it just has no trend line yet.
+  const single = data.length === 1;
   // Grid
   ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--border')||'#D4E9E1';
   ctx.lineWidth=1;
@@ -2492,15 +2488,18 @@ function drawLineChart(ctx,w,h,data,max,col,labels){
     ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(padL+cw,y);ctx.stroke();
   });
   // Area fill
-  const pts=data.map((v,i)=>({x:padL+i*(cw/(data.length-1)),y:padT+ch-(v/max)*ch}));
-  ctx.beginPath();ctx.moveTo(pts[0].x,padT+ch);
-  pts.forEach(p=>ctx.lineTo(p.x,p.y));
-  ctx.lineTo(pts[pts.length-1].x,padT+ch);ctx.closePath();
-  ctx.fillStyle=col+'22';ctx.fill();
-  // Line
-  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
-  pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
-  ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
+  const pts=data.map((v,i)=>({x: single ? padL+cw/2 : padL+i*(cw/(data.length-1)),
+                              y: padT+ch-(v/max)*ch}));
+  if(!single){
+    ctx.beginPath();ctx.moveTo(pts[0].x,padT+ch);
+    pts.forEach(p=>ctx.lineTo(p.x,p.y));
+    ctx.lineTo(pts[pts.length-1].x,padT+ch);ctx.closePath();
+    ctx.fillStyle=col+'22';ctx.fill();
+    // Line
+    ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+    pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
+    ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
+  }
   // Dots + labels
   pts.forEach((p,i)=>{
     ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);
@@ -2518,6 +2517,11 @@ function drawLineChart(ctx,w,h,data,max,col,labels){
   ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--text-3')||'#8AADA4';
   ctx.font='9px Inter,sans-serif';ctx.textAlign='right';
   [0,.5,1].forEach(f=>{ctx.fillText(Math.round(max*f),padL-4,padT+ch*(1-f)+4);});
+  if(single){
+    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--text-3')||'#8AADA4';
+    ctx.font='9px Inter,sans-serif';ctx.textAlign='center';
+    ctx.fillText('ทำอีกครั้งเพื่อดูแนวโน้ม', padL+cw/2, padT+10);
+  }
 }
 
 /* ══════════ THEME ══════════ */
